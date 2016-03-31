@@ -31,5 +31,6 @@
 *.sdf
 *.opensdf
 *.opendb
+*.user
 Debug/*
 Release/*
