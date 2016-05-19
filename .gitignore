@@ -37,3 +37,4 @@ Release/*
 build/*
 Build/*
 .idea/*
+log.txt
