@@ -38,3 +38,4 @@ build/*
 Build/*
 .idea/*
 log.txt
+vtlog.log

@@ -1,6 +1,7 @@
 #include "Logger.h"
 #include <chrono>
 #include <ctime>
+#include "Configuration.h"
 
 Logger &Logger::getInstance()
 {
@@ -10,7 +11,13 @@ Logger &Logger::getInstance()
 
 Logger::Logger()
 {
-    outFile.open(LOGFILENAME, std::ios::out | std::ios::app);
+    if(CONFIG.has("logfile_path"))
+    {
+        outFile.open(CONFIG.getValue("logfile_path"), std::ios::out | std::ios::app);
+    }
+    else
+        outFile.open(LOGFILENAME, std::ios::out | std::ios::app);
+
 }
 
 Logger::~Logger()

@@ -4,6 +4,7 @@
 #include "json/reader.h"
 
 #define CONF_FILE_NAME "virustotalpolling.conf"
+#define CONFIG Configuration::getInstance()
 
 class Configuration
 {

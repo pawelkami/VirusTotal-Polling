@@ -5,13 +5,11 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
-	Configuration c = Configuration::getInstance();
-	
 	LOG_DEBUG("przed a=0");
 	int a = 0;
 	a++;
 	LOG_ERROR("po a++");
-	bool b = c.has("testowy");
-	string s = c.getValue("testowy");
+	bool b = CONFIG.has("host");
+	string s = CONFIG.getValue("host");
 	return 0;
 }
