@@ -34,3 +34,6 @@
 *.user
 Debug/*
 Release/*
+build/*
+Build/*
+.idea/*

@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cassert>
 #include <set>
 #include <sstream>
+#include "reader.h"
 
 /*  
 
@@ -42,8 +43,8 @@ TODO:
 namespace json
 {
 
-inline std::istream& operator >> (std::istream& istr, UnknownElement& elementRoot) {
-   Reader::Read(elementRoot, istr);
+inline std::istream& operator >> (std::istream& istr, json::UnknownElement& elementRoot) {
+   json::Reader::Read(elementRoot, istr);
    return istr;
 }
 
@@ -320,7 +321,7 @@ inline std::string Reader::MatchString(InputStream& inputStream)
             case 'n':      string.push_back('\n');    break;
             case 'r':      string.push_back('\r');    break;
             case 't':      string.push_back('\t');    break;
-            case 'u':      string.push_back('\u');    break; // TODO: what do we do with this?
+            //case 'u':      string.push_back('\u');    break; // TODO: what do we do with this?
             default: {
                std::string sMessage = std::string("Unrecognized escape sequence found in string: \\") + c;
                throw ScanException(sMessage, inputStream.GetLocation());

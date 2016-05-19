@@ -1,7 +1,7 @@
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 
-#include "external_libraries\json\reader.h"
+#include "json/reader.h"
 
 #define CONF_FILE_NAME "virustotalpolling.conf"
 

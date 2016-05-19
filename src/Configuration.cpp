@@ -1,5 +1,5 @@
 #include "Configuration.h"
-#include "external_libraries\json\reader.h"
+#include "json/reader.h"
 #include <fstream>
 
 
