@@ -1,6 +1,7 @@
 #include "Configuration.h"
 #include "json/reader.h"
 #include <fstream>
+#include "Logger.h"
 
 
 
@@ -45,5 +46,8 @@ std::string Configuration::getValue(std::string key)
 	{
 		return json::String(map[key]);
 	}
+
+	LOG_INFO("No key = '" + key + "' in configuration file");
+
 	return "";
 }

@@ -12,7 +12,7 @@ include_directories(
 set(SOURCE_FILES
         src/Configuration.cpp
         src/Configuration.h
-        src/main.cpp src/Logger.cpp src/Logger.h)
+        src/main.cpp src/Logger.cpp src/Logger.h src/HttpClient.cpp src/HttpClient.h src/HttpRequest.cpp src/HttpRequest.h)
 
 set(PROJECT_LINK_LIBS
         ${CMAKE_CURRENT_SOURCE_DIR}/external_libraries/TKOM)
