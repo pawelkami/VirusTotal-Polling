@@ -1,5 +1,4 @@
 #include "Configuration.h"
-#include "json/reader.h"
 #include <fstream>
 #include "Logger.h"
 
@@ -23,13 +22,16 @@ Configuration & Configuration::getInstance()
 
 void Configuration::readConfig()
 {
-	json::Reader reader;
 	std::ifstream fin;
 	fin.open(CONF_FILE_NAME);
-
 	if (fin.is_open())
 	{
-		reader.Read(map, fin);
+        std::string jsonStr;
+        std::string temp;
+        while(std::getline(fin, temp))
+            jsonStr += temp;
+
+        json.init(jsonStr);
 		fin.close();
 	}
 
@@ -37,17 +39,10 @@ void Configuration::readConfig()
 
 bool Configuration::has(std::string key)
 {
-	return map.Find(key) != map.End();
+    return json.has(key);
 }
 
 std::string Configuration::getValue(std::string key)
 {
-	if (has(key))
-	{
-		return json::String(map[key]);
-	}
-
-	LOG_INFO("No key = '" + key + "' in configuration file");
-
-	return "";
+    return json.getValue(key);
 }

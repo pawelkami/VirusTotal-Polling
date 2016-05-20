@@ -6,6 +6,7 @@
 
 void HttpClient::init()
 {
+    LOG_DEBUG("");
     struct sockaddr_in addr;
     struct hostent* server;
 
@@ -60,7 +61,8 @@ HttpClient::~HttpClient()
 
 }
 
-void HttpClient::send(const HttpRequest &request) {
+void HttpClient::send(const HttpRequest &request)
+{
 
 }
 

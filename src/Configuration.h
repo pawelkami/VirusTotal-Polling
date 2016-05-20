@@ -2,6 +2,7 @@
 #define CONFIGURATION_H
 
 #include "json/reader.h"
+#include "JsonObject.h"
 
 #define CONF_FILE_NAME "virustotalpolling.conf"
 #define CONFIG Configuration::getInstance()
@@ -10,7 +11,8 @@ class Configuration
 {
 private:
 	Configuration();
-	json::Object map;
+
+	JsonObject json;
 
 public:
 	~Configuration();
