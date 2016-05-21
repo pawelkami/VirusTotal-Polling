@@ -74,7 +74,7 @@ std::string VirusTotalLogic::getReport(const std::string& hash, const std::strin
             "&scan_id=" + scan_id);
     request.putHeader("content-length", "0");
 
-    http.send(request);
+    http.sendMsg(request);
     std::string response = http.receiveResponse();
 
     // Teraz trzeba chyba sprawdzić response_code w odpowiedzi i w zależności od jego wartości, albo dalej odpytywać
@@ -92,7 +92,7 @@ void VirusTotalLogic::sendFile(const std::string &filePath)
     request.putHeader("content-length", std::to_string(body.size()));
     request.putBody(body);
 
-    http.send(request);
+    http.sendMsg(request);
     std::string response = http.receiveResponse();
 
     // tutaj trzeba wyciągnąć scan_id i jeden z hashy (np. md5)
