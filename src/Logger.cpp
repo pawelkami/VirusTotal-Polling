@@ -48,10 +48,10 @@ void Logger::log(Level level, const std::string &message, char const* function)
             break;
     }
 
-    time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    std::string time(std::ctime(&now));
-    time = time.substr(0, time.size()-1);
-    outFile << time << lvl << " " << function << "() " << message << '\n';
+//    time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+//    std::string time(std::ctime(&now));
+//    time = time.substr(0, time.size()-1);
+    outFile << currentDateTime() << lvl << " " << function << "() " << message << '\n';
 
 }
 

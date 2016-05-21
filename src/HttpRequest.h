@@ -1,6 +1,3 @@
-//
-// Created by osboxes on 20/05/16.
-//
 
 #ifndef VIRUSTOTAL_POLLING_HTTPREQUEST_H
 #define VIRUSTOTAL_POLLING_HTTPREQUEST_H

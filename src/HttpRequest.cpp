@@ -1,6 +1,3 @@
-//
-// Created by osboxes on 20/05/16.
-//
 
 #include <sstream>
 #include "HttpRequest.h"
