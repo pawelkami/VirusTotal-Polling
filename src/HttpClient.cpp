@@ -11,7 +11,7 @@ void HttpClient::init()
     struct hostent* server;
 
     // create socket
-    sock = socket(AF_INET, SOCK_DGRAM, 0);
+    sock = socket(AF_INET, SOCK_STREAM, 0);
     if(sock < 0)
     {
         LOG_ERROR("creating socket failed");
@@ -46,8 +46,6 @@ void HttpClient::init()
         LOG_ERROR("Connection failed");
         return;
     }
-
-    close(sock);
 
 }
 
