@@ -7,6 +7,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <resolv.h>
+#include <arpa/inet.h>
 
 
 class HttpClient
@@ -20,7 +22,7 @@ public:
 
     void init();
 
-    void send(const HttpRequest& request);
+    void sendMsg(const HttpRequest& request);
 
     std::string receiveResponse();
 };
