@@ -2,6 +2,7 @@
 // Created by osboxes on 20/05/16.
 //
 
+#include <sstream>
 #include "HttpRequest.h"
 
 void HttpRequest::putRequest(HttpMethod method, const std::string &selector)
@@ -35,7 +36,7 @@ void HttpRequest::putRequest(HttpMethod method, const std::string &selector)
             break;
     }
 
-    request = meth + " " + selector + " HTTP/1.1";
+    request = meth + " " + selector + " HTTP/1.1\r\n";
 }
 
 void HttpRequest::putHeader(const std::string &key, const std::string &value)
@@ -51,7 +52,7 @@ void HttpRequest::putBody(const std::string &body)
 std::string HttpRequest::getRequest() const
 {
     std::string fullRequest;
-    fullRequest = request + "\r\n";
+    fullRequest = request;
 
     for(auto& h : headers)
     {
@@ -65,6 +66,50 @@ std::string HttpRequest::getRequest() const
 
     return fullRequest;
 }
+
+HttpRequest::HttpRequest(const std::string &req)
+{
+    buildRequest(req);
+}
+
+void HttpRequest::buildRequest(const std::string &req)
+{
+    std::stringstream ss;
+    ss << req;
+
+    std::string temp;
+    std::getline(ss, temp);
+
+    request = temp;
+
+    while(std::getline(ss, temp) && temp.find(":") != std::string::npos)
+    {
+        std::string key = temp.substr(0, temp.find_first_of(":"));
+        std::string value = temp.substr(temp.find_first_of(" ") + 1, temp.size());
+        putHeader(key, value);
+    }
+
+    std::string body;
+    while(std::getline(ss, temp))
+    {
+        body += temp;
+    }
+
+    putBody(body);
+}
+
+const std::string &HttpRequest::getBody()
+{
+    return body;
+}
+
+
+
+
+
+
+
+
 
 
 

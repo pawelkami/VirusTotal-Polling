@@ -32,7 +32,11 @@ private:
     // HTTP request body
     std::string body;
 
+    void buildRequest(const std::string& req);
+
 public:
+    HttpRequest() {}
+    HttpRequest(const std::string& req);
 
     void putRequest(HttpMethod method, const std::string& selector);
 
@@ -41,6 +45,8 @@ public:
     void putBody(const std::string& body);
 
     std::string getRequest() const;
+
+    const std::string& getBody();
 
 };
 
