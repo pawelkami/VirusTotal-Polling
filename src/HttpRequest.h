@@ -40,7 +40,7 @@ public:
 
     void putBody(const std::string& body);
 
-    std::string getRequest();
+    std::string getRequest() const;
 
 };
 

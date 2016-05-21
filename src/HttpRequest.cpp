@@ -48,7 +48,7 @@ void HttpRequest::putBody(const std::string &body)
     this->body = body;
 }
 
-std::string HttpRequest::getRequest()
+std::string HttpRequest::getRequest() const
 {
     std::string fullRequest;
     fullRequest = request + "\r\n";
