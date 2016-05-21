@@ -1,6 +1,7 @@
 #include "Configuration.h"
 #include "Logger.h"
 #include "HttpClient.h"
+#include "VirusTotalLogic.h"
 
 using namespace std;
 

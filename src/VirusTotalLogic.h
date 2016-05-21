@@ -8,7 +8,7 @@
 class VirusTotalLogic
 {
 private:
-    std::string boundary;
+    std::string boundary = "@@@BOUNDARY@@@";
     std::string getFilename(const std::string& filePath);
     HttpClient http;
 
@@ -17,9 +17,11 @@ public:
 
     std::string getContentType();
 
+    std::string getReport(const std::string& hash, const std::string& scan_id);
+
     void initializeConnection();
 
-    void sendData(const std::string& data);
+    void sendFile(const std::string& filePath);
 
     std::string parseResults(const std::string& html);
 
