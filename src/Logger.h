@@ -3,6 +3,7 @@
 
 #include <string>
 #include <fstream>
+#include "Utils.h"
 
 #define LOGFILENAME "log.txt"
 #define LOGGER Logger::getInstance()
