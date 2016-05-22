@@ -38,8 +38,8 @@ po::variables_map handleParameters(int argc, char **argv)
     po::options_description description("Options");
     description.add_options()
             ("help,h", "Print this message")
-            ("cycles,c", "Number of rescans")
-            ("time,t", "Time between rescans")
+            ("cycles,c", po::value<int>(), "Number of rescans")
+            ("time,t", po::value<int>(), "Time between rescans")
             ("file", po::value<string>(), "File to scan");
 
     po::positional_options_description positionalDescription;
