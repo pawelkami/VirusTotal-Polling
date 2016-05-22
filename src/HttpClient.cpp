@@ -4,7 +4,7 @@
 void HttpClient::init()
 {
     LOG_DEBUG("");
-    uint16_t port = (uint16_t)std::stoi(CONFIG.getValue("port"));
+    port = (uint16_t)std::stoi(CONFIG.getValue("port"));
 
     struct sockaddr_in addr;
     struct hostent* server;
@@ -58,8 +58,6 @@ void HttpClient::init()
         conn = SSL_new(ssl_ctx);
         SSL_set_fd(conn, sock);
 
-
-
         if(SSL_connect(conn) < 0)
         {
             LOG_ERROR("SSL Connection failed");
@@ -77,7 +75,7 @@ HttpClient::HttpClient()
 
 HttpClient::~HttpClient()
 {
-    if(port == SSL_PORT)
+    if(isSSL)
     {
         SSL_shutdown(conn);
         SSL_free(conn);
@@ -110,17 +108,59 @@ void HttpClient::sendMsg(const HttpRequest &request)
 HttpResponse HttpClient::receiveResponse()
 {
     std::string answer;
+    int size_recv , total_size= 0;
+    struct timeval begin , now;
     char answ[1024];
+    double timediff;
+
     memset(answ, 0, sizeof(answ));
-    if(isSSL)
+    //make socket non blocking
+    fcntl(sock, F_SETFL, O_NONBLOCK);
+    //beginning time
+    gettimeofday(&begin , NULL);
+
+    while(1)
     {
-        while(SSL_read(conn, answ, sizeof(answ)) > 0)
-            answer += std::string(answ);
+        gettimeofday(&now , NULL);
+
+        timediff = (now.tv_sec - begin.tv_sec) + 1e-6 * (now.tv_usec - begin.tv_usec);
+
+        if( total_size > 0 && timediff > TIMEOUT )
+            break;
+        else if( timediff > TIMEOUT*2)
+            break;
+
+
+        if(isSSL)
+        {
+            memset(answ ,0 , sizeof(answ));  //clear the variable
+            if((size_recv =  SSL_read(conn, answ, sizeof(answ)) ) < 0)
+            {
+                usleep(100000);
+            }
+            else
+            {
+                total_size += size_recv;
+                answer += std::string(answ);
+                gettimeofday(&begin , NULL);
+            }
+        }
+        else
+        {
+            memset(answ ,0 , sizeof(answ));  //clear the variable
+            if((size_recv =  (int)recv(sock, answ , sizeof(answ) , 0) ) < 0)
+            {
+                usleep(100000);
+            }
+            else
+            {
+                total_size += size_recv;
+                printf("%s" , answ);
+                answer += std::string(answ);
+                gettimeofday(&begin , NULL);
+            }
+        }
     }
-    else
-    {
-        while(recv(sock,answ,sizeof(answ),0) > 0)
-            answer += std::string(answ);
-    }
+
     return HttpResponse(answer);
 }

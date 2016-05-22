@@ -12,11 +12,13 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <cstring>
-#include <unistd.h>
 #include <openssl/ssl.h>
 #include <errno.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #define SSL_PORT 443
+#define TIMEOUT 5
 
 class HttpClient
 {
