@@ -60,6 +60,7 @@ int main(int argc, char** argv)
         vtl.initializeConnection();
         vtl.setVirusPath(filePath);
         vtl.sendFile();
+        vtl.getReport();
     }
 	return 0;
 }

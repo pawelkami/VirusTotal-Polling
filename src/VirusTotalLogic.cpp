@@ -1,5 +1,5 @@
-
 #include <sys/stat.h>
+#include <unistd.h>
 #include <fstream>
 #include <vector>
 #include "VirusTotalLogic.h"
@@ -75,12 +75,34 @@ std::string VirusTotalLogic::getReport()
             "&scan_id=" + scan_id);
     request.putHeader("content-length", "0");
 
-    http.sendMsg(request);
-    HttpResponse response = http.receiveResponse();
+    std::string permalink = "";
+    while(true)
+    {
+        http.sendMsg(request);
+        HttpResponse response = http.receiveResponse();
 
-    // Teraz trzeba chyba sprawdzić response_code w odpowiedzi i w zależności od jego wartości, albo dalej odpytywać
-    // ten sam url, albo wyciągnąć permalink i pobrać całą stronę z wynikami skanowań.
+        std::string responseBody = response.getBody();
 
+        unsigned long jsonStart = responseBody.find_first_of("{");
+        unsigned long jsonEnd = responseBody.find_last_of("}");
+
+        JsonObject json;
+        json.init(responseBody.substr(jsonStart, jsonEnd - jsonStart + 1));
+        std::string responseCode = json.getValue("response_code");
+        if (responseCode == "1")
+        {
+            permalink = json.getValue("permalink");
+            break;
+        }
+        else
+        {
+            // Może coś mądrzejszego da się wymiślić.
+            std::cout << "sleep\n";
+            sleep(15);
+        }
+    }
+
+    std::cout << permalink << std::endl;
     return "";
 }
 
@@ -97,8 +119,8 @@ void VirusTotalLogic::sendFile()
     HttpResponse response = http.receiveResponse();
 
     std::string responseBody = response.getBody();
-    int jsonStart = responseBody.find_first_of("{");
-    int jsonEnd = responseBody.find_last_of("}");
+    unsigned long jsonStart = responseBody.find_first_of("{");
+    unsigned long jsonEnd = responseBody.find_last_of("}");
 
     JsonObject json;
     json.init(responseBody.substr(jsonStart, jsonEnd - jsonStart + 1));

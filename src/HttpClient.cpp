@@ -131,9 +131,9 @@ HttpResponse HttpClient::receiveResponse()
             break;
 
 
+        memset(answ, 0 , sizeof(answ));  //clear the variable
         if(isSSL)
         {
-            memset(answ ,0 , sizeof(answ));  //clear the variable
             if((size_recv =  SSL_read(conn, answ, sizeof(answ)) ) < 0)
             {
                 usleep(100000);
@@ -147,8 +147,7 @@ HttpResponse HttpClient::receiveResponse()
         }
         else
         {
-            memset(answ ,0 , sizeof(answ));  //clear the variable
-            if((size_recv =  (int)recv(sock, answ , sizeof(answ) , 0) ) < 0)
+            if((size_recv =  (int)recv(sock, answ , sizeof(answ), 0) ) < 0)
             {
                 usleep(100000);
             }
