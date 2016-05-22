@@ -4,6 +4,12 @@ project(VirusTotal_Polling)
 find_package(PkgConfig REQUIRED)
 pkg_search_module(OPENSSL REQUIRED openssl)
 
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+find_package(Boost 1.54.0 COMPONENTS program_options)
+
+
 if( OPENSSL_FOUND )
     include_directories(${OPENSSL_INCLUDE_DIRS})
     message(STATUS "Using OpenSSL ${OPENSSL_VERSION}")
@@ -34,3 +40,8 @@ set(PROJECT_LINK_LIBS
 add_executable(VirusTotal_Polling ${SOURCE_FILES})
 
 target_link_libraries(VirusTotal_Polling htmlparser ${OPENSSL_LIBRARIES})
+
+if(Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS})
+    target_link_libraries(VirusTotal_Polling ${Boost_LIBRARIES})
+endif()
