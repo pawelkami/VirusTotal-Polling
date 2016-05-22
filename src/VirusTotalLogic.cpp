@@ -225,7 +225,7 @@ void VirusTotalLogic::saveResultsToFile(const std::string &results)
     fout << results;
 
     fout.close();
-    LOG_INFO("Saved results")
+    LOG_INFO("Saved results");
 }
 
 void VirusTotalLogic::setVirusPath(const std::string &path)
