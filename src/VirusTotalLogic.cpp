@@ -79,7 +79,6 @@ std::string VirusTotalLogic::getReport()
             "&scan_id=" + scan_id);
     request.putHeader("content-length", "0");
 
-    std::string permalink = "";
     while(true)
     {
         http.sendMsg(request);
@@ -87,8 +86,14 @@ std::string VirusTotalLogic::getReport()
 
         std::string responseBody = response.getBody();
 
-        unsigned long jsonStart = responseBody.find_first_of("{");
-        unsigned long jsonEnd = responseBody.find_last_of("}");
+        size_t jsonStart = responseBody.find_first_of("{");
+        size_t jsonEnd = responseBody.find_last_of("}");
+
+        if (jsonStart == std::string::npos || jsonEnd == std::string::npos)
+        {
+            LOG_ERROR("Invalid response body");
+            throw RequestException("Invalid response body");
+        }
 
         JsonObject json;
         json.init(responseBody.substr(jsonStart, jsonEnd - jsonStart + 1));
@@ -99,22 +104,16 @@ std::string VirusTotalLogic::getReport()
         }
         else
         {
-            // Może coś mądrzejszego da się wymiślić.
             sleep(15);
         }
     }
 
-    std::string analysisId = scan_id.substr(scan_id.find_first_of('-') + 1, std::string::npos);
 
-    HttpRequest getPageRequest;
-    getPageRequest.putRequest(GET, "/en/file/" + fileHash + "/analysis/" + analysisId + "/");
-    getPageRequest.putHeader("host", "www.virustotal.com");
-    getPageRequest.putHeader("content-length", "0");
+    std::string html;
 
-    http.sendMsg(getPageRequest);
-    HttpResponse response = http.receiveResponse();
+    getContentFromAddress(permalink, html);
 
-    return response.getBody();
+    return html;
 }
 
 void VirusTotalLogic::sendFile()
@@ -206,7 +205,11 @@ void VirusTotalLogic::saveResultsToFile(const std::string &results)
     }
 
     if(!resultsPath.empty())
-        mkdir(resultsPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        if(mkdir(resultsPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1)
+        {
+            LOG_ERROR("Failed creating directory, error: " + std::string(strerror(errno)));
+            resultsPath = "";
+        }
 
     std::string filename =  resultsPath + virusPath.substr(virusPath.find_last_of('/') + 1, virusPath.size());
 
