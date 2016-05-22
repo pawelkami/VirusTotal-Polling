@@ -58,6 +58,12 @@ const std::string &HttpResponse::getBody()
     return body;
 }
 
+const std::string &HttpResponse::getHeader(const std::string &key) {
+    return headers[key];
+}
+
+
+
 
 
 

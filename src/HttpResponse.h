@@ -32,6 +32,8 @@ public:
 
     const std::string& getBody();
 
+    const std::string& getHeader(const std::string& key);
+
 };
 
 

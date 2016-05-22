@@ -15,6 +15,7 @@ private:
     std::string virusPath;
     std::string fileHash;
     std::string scan_id;
+    std::string permalink;
 
 public:
     void setVirusPath(const std::string& path);
@@ -32,6 +33,10 @@ public:
     std::string parseResults(const std::string& html);
 
     void saveResultsToFile(const std::string& results);
+
+    void getContentFromAddress(const std::string &address, std::string &result);
+
+    std::string getPermaLink();
 
 };
 

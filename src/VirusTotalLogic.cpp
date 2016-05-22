@@ -134,6 +134,7 @@ void VirusTotalLogic::sendFile()
 
     fileHash = json.getValue("sha256");
     scan_id = json.getValue("scan_id");
+    permalink = json.getValue("permalink");
     LOG_INFO("Received md5 = " + fileHash + ", scan_id = " + scan_id);
 }
 
@@ -213,6 +214,55 @@ void VirusTotalLogic::setVirusPath(const std::string &path)
 {
     virusPath = path;
 }
+
+
+
+
+void VirusTotalLogic::getContentFromAddress(const std::string &address, std::string &result)
+{
+
+
+//    //wersja ze scan_id
+//    std::string delimiter = "-";
+//    size_t pos = 0;
+//    std::string sha256;
+//    std::string myscan;
+//    if ((pos = scan_id.find(delimiter)) != std::string::npos)
+//        sha256 = scan_id.substr(0, pos);
+//    myscan = scan_id.substr(pos+delimiter.length(), std::string::npos);
+//    std::string relativePath = "/file/" + sha256 + "/analysis/" + myscan + "/";
+
+    size_t pos = 0;
+    std::string relativePath;
+    if ((pos = address.find(CONFIG.getValue("host"))) != std::string::npos)
+    {
+        relativePath = address.substr(pos+CONFIG.getValue("host").length(),std::string::npos);
+        LOG_DEBUG("relativePath = " + relativePath);
+    }
+
+    else
+    {
+        LOG_ERROR("Wrong address given = " + address);
+        return;
+    }
+
+    HttpRequest req;
+    req.putRequest(HttpMethod::GET, relativePath);
+    req.putHeader("host", CONFIG.getValue("host"));
+    http.sendMsg(req);
+    HttpResponse r = http.receiveResponse();
+    LOG_DEBUG(r.getResponseCode() + ", " + r.getHeader("Location"));
+    if (r.getResponseCode() == "301")
+        getContentFromAddress(r.getHeader("Location"), result);
+    else if (r.getResponseCode() == "200")
+        result = r.getBody();
+}
+
+std::string VirusTotalLogic::getPermaLink()
+{
+    return permalink;
+}
+
 
 
 
