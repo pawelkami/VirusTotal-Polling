@@ -154,7 +154,6 @@ HttpResponse HttpClient::receiveResponse()
             else
             {
                 total_size += size_recv;
-                printf("%s" , answ);
                 answer += std::string(answ);
                 gettimeofday(&begin , NULL);
             }
