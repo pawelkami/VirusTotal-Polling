@@ -82,7 +82,7 @@ void HttpClient::sendMsg(const HttpRequest &request)
 
     if(port == SSL_PORT)
     {
-        if(SSL_write(conn, msg.c_str(), (int)msg.length()) < 0)
+        if(SSL_write(conn, msg.c_str(), (int)msg.length()) != (int)msg.length())
         {
             LOG_ERROR("Error SSLsending request.");
             return;
@@ -106,7 +106,7 @@ std::string HttpClient::receiveResponse()
 
     if(port == SSL_PORT)
     {
-        while(SSL_read(conn, answ, sizeof(answ)) < 0)
+        while(SSL_read(conn, answ, sizeof(answ)) > 0)
             answer += std::string(answ);
     }
     else
