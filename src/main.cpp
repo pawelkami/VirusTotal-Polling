@@ -60,7 +60,9 @@ int main(int argc, char** argv)
         vtl.initializeConnection();
         vtl.setVirusPath(filePath);
         vtl.sendFile();
-        vtl.getReport();
+        std::string html = vtl.getReport();
+        std::string results = vtl.parseResults(html);
+        vtl.saveResultsToFile(results);
     }
 	return 0;
 }

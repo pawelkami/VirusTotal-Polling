@@ -91,19 +91,26 @@ std::string VirusTotalLogic::getReport()
         std::string responseCode = json.getValue("response_code");
         if (responseCode == "1")
         {
-            permalink = json.getValue("permalink");
             break;
         }
         else
         {
             // Może coś mądrzejszego da się wymiślić.
-            std::cout << "sleep\n";
             sleep(15);
         }
     }
 
-    std::cout << permalink << std::endl;
-    return "";
+    std::string analysisId = scan_id.substr(scan_id.find_first_of('-') + 1, std::string::npos);
+
+    HttpRequest getPageRequest;
+    getPageRequest.putRequest(GET, "/en/file/" + fileHash + "/analysis/" + analysisId + "/");
+    getPageRequest.putHeader("host", "www.virustotal.com");
+    getPageRequest.putHeader("content-length", "0");
+
+    http.sendMsg(getPageRequest);
+    HttpResponse response = http.receiveResponse();
+
+    return response.getBody();
 }
 
 void VirusTotalLogic::sendFile()
@@ -125,7 +132,7 @@ void VirusTotalLogic::sendFile()
     JsonObject json;
     json.init(responseBody.substr(jsonStart, jsonEnd - jsonStart + 1));
 
-    fileHash = json.getValue("md5");
+    fileHash = json.getValue("sha256");
     scan_id = json.getValue("scan_id");
     LOG_INFO("Received md5 = " + fileHash + ", scan_id = " + scan_id);
 }
