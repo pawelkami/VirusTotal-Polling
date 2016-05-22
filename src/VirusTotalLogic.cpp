@@ -67,10 +67,10 @@ std::string VirusTotalLogic::getFilename(const std::string& filePath)
     return filePath.substr(slashIndex + 1, std::string::npos);
 }
 
-std::string VirusTotalLogic::getReport(const std::string& hash, const std::string& scan_id)
+std::string VirusTotalLogic::getReport()
 {
     HttpRequest request;
-    request.putRequest(POST, CONFIG.getValue("report_url") + "?resource=" + hash + "&apikey=" + CONFIG.getValue("apikey") +
+    request.putRequest(POST, CONFIG.getValue("report_url") + "?resource=" + fileHash + "&apikey=" + CONFIG.getValue("apikey") +
             "&scan_id=" + scan_id);
     request.putHeader("content-length", "0");
 
@@ -83,9 +83,9 @@ std::string VirusTotalLogic::getReport(const std::string& hash, const std::strin
     return "";
 }
 
-void VirusTotalLogic::sendFile(const std::string &filePath)
+void VirusTotalLogic::sendFile()
 {
-    std::string body = encodeData(filePath);
+    std::string body = encodeData(virusPath);
     HttpRequest request;
     request.putRequest(POST, CONFIG.getValue("scan_url"));
     request.putHeader("content-type", getContentType());
@@ -94,6 +94,8 @@ void VirusTotalLogic::sendFile(const std::string &filePath)
 
     http.sendMsg(request);
     std::string response = http.receiveResponse();
+
+    std::cout << response;
 
     // tutaj trzeba wyciągnąć scan_id i jeden z hashy (np. md5)
 }

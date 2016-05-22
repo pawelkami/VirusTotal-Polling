@@ -13,6 +13,8 @@ private:
     HttpClient http;
 
     std::string virusPath;
+    std::string fileHash;
+    std::string scan_id;
 
 public:
     void setVirusPath(const std::string& path);
@@ -21,11 +23,11 @@ public:
 
     std::string getContentType();
 
-    std::string getReport(const std::string& hash, const std::string& scan_id);
+    std::string getReport();
 
     void initializeConnection();
 
-    void sendFile(const std::string& filePath);
+    void sendFile();
 
     std::string parseResults(const std::string& html);
 

@@ -3,6 +3,7 @@
 #include "Configuration.h"
 #include "Logger.h"
 #include "HttpClient.h"
+#include "VirusTotalLogic.h"
 
 using namespace std;
 
@@ -29,30 +30,36 @@ int main(int argc, char** argv)
 
         if (vm.count("help"))
         {
-            std::cout << description << std::endl;
+            cout << description << endl;
             return 0;
         }
 
     }
     catch(po::error& e)
     {
-        std::cerr << "ERROR: " << e.what() << std::endl << std::endl;
-        std::cerr << description << std::endl;
+        cerr << "ERROR: " << e.what() << endl << endl;
+        cerr << description << endl;
+        return 0;
+    }
+    
+    if (!vm.count("file"))
+    {
+        cout << "No file to scan" << endl;
         return 0;
     }
 
+    string filePath = vm["file"].as<string>();
 
-    HttpClient http;
-
-    HttpRequest request;
-    request.putRequest(HttpMethod::GET, "/");
-    request.putHeader("Host", "www.virustotal.com");
-    request.putHeader("Accept", "*/*");
-    request.putHeader("Connection", "Keep-Alive");
-
-    http.init();
-    http.sendMsg(request);
-    std::cout << http.receiveResponse();
-
+    if (vm.count("cycles"))
+    {
+//        Tryb z cyklicznym skanowaniem
+    }
+    else
+    {
+        VirusTotalLogic vtl;
+        vtl.initializeConnection();
+        vtl.setVirusPath(filePath);
+        vtl.sendFile();
+    }
 	return 0;
 }
