@@ -110,7 +110,7 @@ HttpResponse HttpClient::receiveResponse()
     std::string answer;
     int size_recv , total_size= 0;
     struct timeval begin , now;
-    char answ[1024];
+    char answ[RCV_BUF_SIZE];
     double timediff;
 
     memset(answ, 0, sizeof(answ));

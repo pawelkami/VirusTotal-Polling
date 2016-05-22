@@ -19,6 +19,7 @@
 
 #define SSL_PORT 443
 #define TIMEOUT 4
+#define RCV_BUF_SIZE 1024
 
 class HttpClient
 {
