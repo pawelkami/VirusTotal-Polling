@@ -3,6 +3,7 @@
 
 #include "Configuration.h"
 #include "Logger.h"
+#include "HttpResponse.h"
 #include "HttpRequest.h"
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -38,7 +39,7 @@ public:
 
     void sendMsg(const HttpRequest& request);
 
-    std::string receiveResponse();
+    HttpResponse receiveResponse();
 
 };
 
