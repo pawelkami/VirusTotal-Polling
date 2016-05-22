@@ -9,12 +9,24 @@
 #include <netinet/in.h>
 #include <resolv.h>
 #include <arpa/inet.h>
+#include <netdb.h>
+#include <cstring>
+#include <unistd.h>
+#include <openssl/ssl.h>
+#include <errno.h>
 
+#define SSL_PORT 443
 
 class HttpClient
 {
 private:
     int sock;
+
+    SSL *conn;
+
+    SSL_CTX *ssl_ctx;
+
+    uint16_t port;
 
 public:
     HttpClient();
@@ -25,6 +37,7 @@ public:
     void sendMsg(const HttpRequest& request);
 
     std::string receiveResponse();
+
 };
 
 
