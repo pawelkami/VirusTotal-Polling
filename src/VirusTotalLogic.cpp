@@ -100,6 +100,7 @@ std::string VirusTotalLogic::getReport()
         std::string responseCode = json.getValue("response_code");
         if (responseCode == "1")
         {
+            permalink = json.getValue("permalink");
             break;
         }
         else
@@ -107,7 +108,6 @@ std::string VirusTotalLogic::getReport()
             sleep(15);
         }
     }
-
 
     std::string html;
 
@@ -151,6 +151,32 @@ void VirusTotalLogic::sendFile()
     scan_id = json.getValue("scan_id");
     permalink = json.getValue("permalink");
     LOG_INFO("Received sha256 = " + fileHash + ", scan_id = " + scan_id);
+}
+
+void VirusTotalLogic::rescan()
+{
+    HttpRequest request;
+    request.putRequest(POST, CONFIG.getValue("rescan_url") + "?resource=" + fileHash + "&apikey=" + CONFIG.getValue("apikey"));
+    request.putHeader("content-length", "0");
+
+    http.sendMsg(request);
+    HttpResponse response = http.receiveResponse();
+
+    std::string responseBody = response.getBody();
+
+    size_t jsonStart = responseBody.find_first_of("{");
+    size_t jsonEnd = responseBody.find_last_of("}");
+
+    if (jsonStart == std::string::npos || jsonEnd == std::string::npos)
+    {
+        LOG_ERROR("Invalid response body");
+        throw RequestException("Invalid response body");
+    }
+
+    JsonObject json;
+    json.init(responseBody.substr(jsonStart, jsonEnd - jsonStart + 1));
+    scan_id = json.getValue("scan_id");
+    permalink = json.getValue("permalink");
 }
 
 std::string VirusTotalLogic::parseResults(const std::string &html)
@@ -235,9 +261,6 @@ void VirusTotalLogic::setVirusPath(const std::string &path)
 {
     virusPath = path;
 }
-
-
-
 
 void VirusTotalLogic::getContentFromAddress(const std::string &address, std::string &result)
 {

@@ -8,36 +8,36 @@
 class VirusTotalLogic
 {
 private:
-    std::string boundary = "@@@BOUNDARY@@@";
-    std::string getFilename(const std::string& filePath);
-    HttpClient http;
-
-    std::string virusPath;
-    std::string fileHash;
-    std::string scan_id;
-    std::string permalink;
-
-public:
-    void setVirusPath(const std::string& path);
-
     std::string encodeData(const std::string& filePath);
 
+    void getContentFromAddress(const std::string &address, std::string &result);
+
     std::string getContentType();
+
+    std::string getFilename(const std::string& filePath);
+
+    std::string boundary = "@@@BOUNDARY@@@";
+    std::string fileHash;
+    HttpClient http;
+    std::string scan_id;
+    std::string permalink;
+    std::string virusPath;
+
+public:
 
     std::string getReport();
 
     void initializeConnection();
 
-    void sendFile();
-
     std::string parseResults(const std::string& html);
+
+    void rescan();
 
     void saveResultsToFile(const std::string& results);
 
-    void getContentFromAddress(const std::string &address, std::string &result);
+    void sendFile();
 
-    std::string getPermaLink();
-
+    void setVirusPath(const std::string& path);
 };
 
 
