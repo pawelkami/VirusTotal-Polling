@@ -207,7 +207,7 @@ void VirusTotalLogic::saveResultsToFile(const std::string &results)
     if(!resultsPath.empty())
         if(mkdir(resultsPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1)
         {
-            LOG_ERROR("Failed creating directory, error: " + std::string(strerror(errno)));
+            LOG_ERROR("Failed creating directory " + resultsPath + ", error: " + std::string(strerror(errno)));
             resultsPath = "";
         }
 
@@ -269,11 +269,6 @@ void VirusTotalLogic::getContentFromAddress(const std::string &address, std::str
     {
         throw RequestException(r.getResponseCode());
     }
-}
-
-std::string VirusTotalLogic::getPermaLink()
-{
-    return permalink;
 }
 
 
