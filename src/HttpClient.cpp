@@ -1,8 +1,9 @@
 #include "HttpClient.h"
+#include "exception/HttpClientException.h"
 
 void HttpClient::init()
 {
-
+    LOG_DEBUG("");
     uint16_t port = (uint16_t)std::stoi(CONFIG.getValue("port"));
 
     struct sockaddr_in addr;
@@ -14,8 +15,8 @@ void HttpClient::init()
     sock = socket(AF_INET, SOCK_STREAM, 0);
     if(sock < 0)
     {
-        LOG_ERROR("creating socket failed");
-        return;
+        LOG_ERROR("creating socket failed - " + std::string(strerror(errno)));
+        throw HttpClientException("Creating socket failed");
     }
 
     // lookup ip address
@@ -23,26 +24,25 @@ void HttpClient::init()
     if(hostname.empty())
     {
         LOG_ERROR("No 'host' in configuration file");
-        return;
+        throw HttpClientException("No 'host' in configuration file");
     }
 
     server = gethostbyname(CONFIG.getValue("host").c_str());
     if(server == nullptr)
     {
-        LOG_ERROR("No such host");
+        LOG_ERROR("No such host - " + std::string(strerror(h_errno)));
         return;
     }
 
     addr.sin_family = AF_INET;
-    //addr.sin_addr.s_addr = htonl(INADDR_ANY);
     addr.sin_port = htons(port);
     memcpy(&addr.sin_addr, server->h_addr, server->h_length );
 
     if(connect(sock, (struct sockaddr*)&addr, sizeof(addr)) < 0 )
     {
-        LOG_ERROR("Connection failed");
+        LOG_ERROR("Connection failed - " + std::string(strerror(errno)));
         close(sock);
-        return;
+        throw HttpClientException("Connection failed");
     }
 
     isSSL = port == SSL_PORT;
@@ -65,7 +65,7 @@ void HttpClient::init()
             LOG_ERROR("SSL Connection failed");
             SSL_shutdown(conn);
             close(sock);
-            return;
+            throw HttpClientException("SSL Connection failed");
         }
     }
 }
@@ -93,7 +93,7 @@ void HttpClient::sendMsg(const HttpRequest &request)
     {
         if(SSL_write(conn, msg.c_str(), (int)msg.length()) != (int)msg.length())
         {
-            LOG_ERROR("Error SSLsending request.");
+            LOG_ERROR("Error SSL sending request.");
             return;
         }
     }
