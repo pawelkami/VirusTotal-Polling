@@ -9,6 +9,7 @@ void HttpClient::init()
     struct sockaddr_in addr;
     struct hostent* server;
     memset(&addr, 0, sizeof(addr));
+    memset(&server, 0, sizeof(server));
 
     // create socket
     sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -34,9 +35,9 @@ void HttpClient::init()
     }
 
     addr.sin_family = AF_INET;
-    memcpy(&addr.sin_addr, server->h_addr, server->h_length );
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
     addr.sin_port = htons(port);
+    memcpy(&addr.sin_addr, server->h_addr, server->h_length );
 
     if(connect(sock, (struct sockaddr*)&addr, sizeof(addr)) < 0 )
     {
