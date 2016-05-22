@@ -3,6 +3,8 @@
 #include <fstream>
 #include <vector>
 #include "VirusTotalLogic.h"
+#include "src/exception/RequestException.h"
+#include "src/exception/FileException.h"
 #include "HttpRequest.h"
 #include "HttpResponse.h"
 #include "Parser.h"
@@ -20,8 +22,10 @@ std::string VirusTotalLogic::encodeData(const std::string &filePath)
     is.open(filePath, std::ios::binary | std::ios::out);
     if (is.fail())
     {
-        throw std::runtime_error("Could not open " + filePath);
+        LOG_ERROR("Failed opening file " + filePath);
+        throw FileException("Failed opening file" + filePath);
     }
+
     std::stringstream buffer;
     buffer << is.rdbuf();
     is.close();
@@ -125,9 +129,21 @@ void VirusTotalLogic::sendFile()
     http.sendMsg(request);
     HttpResponse response = http.receiveResponse();
 
+    if (response.getResponseCode()[0] != '2')
+    {
+        LOG_ERROR("Response code " + response.getResponseCode() + " after sending file");
+        throw RequestException(response.getResponseCode());
+    }
+
     std::string responseBody = response.getBody();
-    unsigned long jsonStart = responseBody.find_first_of("{");
-    unsigned long jsonEnd = responseBody.find_last_of("}");
+    size_t jsonStart = responseBody.find_first_of("{");
+    size_t jsonEnd = responseBody.find_last_of("}");
+
+    if (jsonStart == std::string::npos || jsonEnd == std::string::npos)
+    {
+        LOG_ERROR("Invalid response body");
+        throw RequestException("Invalid response body");
+    }
 
     JsonObject json;
     json.init(responseBody.substr(jsonStart, jsonEnd - jsonStart + 1));
@@ -135,7 +151,7 @@ void VirusTotalLogic::sendFile()
     fileHash = json.getValue("sha256");
     scan_id = json.getValue("scan_id");
     permalink = json.getValue("permalink");
-    LOG_INFO("Received md5 = " + fileHash + ", scan_id = " + scan_id);
+    LOG_INFO("Received sha256 = " + fileHash + ", scan_id = " + scan_id);
 }
 
 std::string VirusTotalLogic::parseResults(const std::string &html)
@@ -202,12 +218,14 @@ void VirusTotalLogic::saveResultsToFile(const std::string &results)
     if(!fout.is_open())
     {
         LOG_ERROR("Failed opening file " + filename);
+        throw FileException("Failed opening file " + filename);
         return;
     }
 
     fout << results;
 
     fout.close();
+    LOG_INFO("Saved results")
 }
 
 void VirusTotalLogic::setVirusPath(const std::string &path)
@@ -220,18 +238,6 @@ void VirusTotalLogic::setVirusPath(const std::string &path)
 
 void VirusTotalLogic::getContentFromAddress(const std::string &address, std::string &result)
 {
-
-
-//    //wersja ze scan_id
-//    std::string delimiter = "-";
-//    size_t pos = 0;
-//    std::string sha256;
-//    std::string myscan;
-//    if ((pos = scan_id.find(delimiter)) != std::string::npos)
-//        sha256 = scan_id.substr(0, pos);
-//    myscan = scan_id.substr(pos+delimiter.length(), std::string::npos);
-//    std::string relativePath = "/file/" + sha256 + "/analysis/" + myscan + "/";
-
     size_t pos = 0;
     std::string relativePath;
     if ((pos = address.find(CONFIG.getValue("host"))) != std::string::npos)
@@ -256,6 +262,10 @@ void VirusTotalLogic::getContentFromAddress(const std::string &address, std::str
         getContentFromAddress(r.getHeader("Location"), result);
     else if (r.getResponseCode() == "200")
         result = r.getBody();
+    else
+    {
+        throw RequestException(r.getResponseCode());
+    }
 }
 
 std::string VirusTotalLogic::getPermaLink()

@@ -31,7 +31,7 @@ include_directories(
 set(SOURCE_FILES
         src/Configuration.cpp
         src/Configuration.h
-        src/main.cpp src/Logger.cpp src/Logger.h src/HttpClient.cpp src/HttpClient.h src/HttpRequest.cpp src/HttpRequest.h src/JsonObject.cpp src/JsonObject.h src/VirusTotalLogic.cpp src/VirusTotalLogic.h src/Utils.h src/Utils.cpp src/HttpResponse.cpp src/HttpResponse.h src/exception/HttpClientException.h)
+        src/main.cpp src/Logger.cpp src/Logger.h src/HttpClient.cpp src/HttpClient.h src/HttpRequest.cpp src/HttpRequest.h src/JsonObject.cpp src/JsonObject.h src/VirusTotalLogic.cpp src/VirusTotalLogic.h src/Utils.h src/Utils.cpp src/HttpResponse.cpp src/HttpResponse.h src/exception/HttpClientException.h src/exception/RequestException.h src/exception/FileException.h)
 
 set(PROJECT_LINK_LIBS
         ${CMAKE_CURRENT_SOURCE_DIR}/external_libraries/TKOM)
