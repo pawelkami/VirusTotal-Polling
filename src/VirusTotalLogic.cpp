@@ -4,6 +4,7 @@
 #include <vector>
 #include "VirusTotalLogic.h"
 #include "HttpRequest.h"
+#include "HttpResponse.h"
 #include "Parser.h"
 #include "ResultsAnalyzer.h"
 
@@ -75,7 +76,7 @@ std::string VirusTotalLogic::getReport()
     request.putHeader("content-length", "0");
 
     http.sendMsg(request);
-    std::string response = http.receiveResponse();
+    HttpResponse response = http.receiveResponse();
 
     // Teraz trzeba chyba sprawdzić response_code w odpowiedzi i w zależności od jego wartości, albo dalej odpytywać
     // ten sam url, albo wyciągnąć permalink i pobrać całą stronę z wynikami skanowań.
@@ -93,11 +94,17 @@ void VirusTotalLogic::sendFile()
     request.putBody(body);
 
     http.sendMsg(request);
-    std::string response = http.receiveResponse();
+    HttpResponse response = http.receiveResponse();
 
-    std::cout << response;
+    std::string responseBody = response.getBody();
+    int jsonStart = responseBody.find_first_of("{");
+    int jsonEnd = responseBody.find_last_of("}");
 
-    // tutaj trzeba wyciągnąć scan_id i jeden z hashy (np. md5)
+    JsonObject json;
+    json.init(responseBody.substr(jsonStart, jsonEnd - jsonStart + 1));
+
+    fileHash = json.getValue("md5");
+    scan_id = json.getValue("scan_id");
 }
 
 std::string VirusTotalLogic::parseResults(const std::string &html)

@@ -107,7 +107,7 @@ void HttpClient::sendMsg(const HttpRequest &request)
     }
 }
 
-std::string HttpClient::receiveResponse()
+HttpResponse HttpClient::receiveResponse()
 {
     std::string answer;
     char answ[1024];
@@ -122,5 +122,5 @@ std::string HttpClient::receiveResponse()
         while(recv(sock,answ,sizeof(answ),0) > 0)
             answer += std::string(answ);
     }
-    return answer;
+    return HttpResponse(answer);
 }
