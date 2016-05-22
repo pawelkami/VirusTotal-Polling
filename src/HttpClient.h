@@ -18,7 +18,7 @@
 #include <fcntl.h>
 
 #define SSL_PORT 443
-#define TIMEOUT 5
+#define TIMEOUT 4
 
 class HttpClient
 {
