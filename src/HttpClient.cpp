@@ -2,7 +2,6 @@
 
 void HttpClient::init()
 {
-    LOG_DEBUG("");
 
     uint16_t port = (uint16_t)std::stoi(CONFIG.getValue("port"));
 
@@ -35,7 +34,7 @@ void HttpClient::init()
     }
 
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    //addr.sin_addr.s_addr = htonl(INADDR_ANY);
     addr.sin_port = htons(port);
     memcpy(&addr.sin_addr, server->h_addr, server->h_length );
 
@@ -46,13 +45,20 @@ void HttpClient::init()
         return;
     }
 
-    if(port == SSL_PORT)
+    isSSL = port == SSL_PORT;
+    if(isSSL)
     {
         SSL_load_error_strings();
         SSL_library_init();
+        OpenSSL_add_all_algorithms();
+
         ssl_ctx = SSL_CTX_new (SSLv23_client_method());
+        SSL_CTX_set_options(ssl_ctx, SSL_OP_SINGLE_DH_USE);
+
         conn = SSL_new(ssl_ctx);
         SSL_set_fd(conn, sock);
+
+
 
         if(SSL_connect(conn) < 0)
         {
@@ -72,7 +78,10 @@ HttpClient::HttpClient()
 HttpClient::~HttpClient()
 {
     if(port == SSL_PORT)
+    {
         SSL_shutdown(conn);
+        SSL_free(conn);
+    }
     close(sock);
 }
 
@@ -80,7 +89,7 @@ void HttpClient::sendMsg(const HttpRequest &request)
 {
     auto msg = request.getRequest();
 
-    if(port == SSL_PORT)
+    if(isSSL)
     {
         if(SSL_write(conn, msg.c_str(), (int)msg.length()) < 0)
         {
@@ -103,10 +112,9 @@ std::string HttpClient::receiveResponse()
     std::string answer;
     char answ[1024];
     memset(answ, 0, sizeof(answ));
-
-    if(port == SSL_PORT)
+    if(isSSL)
     {
-        while(SSL_read(conn, answ, sizeof(answ)) < 0)
+        while(SSL_read(conn, answ, sizeof(answ)) > 0)
             answer += std::string(answ);
     }
     else

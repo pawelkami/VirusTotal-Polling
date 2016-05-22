@@ -28,6 +28,8 @@ private:
 
     uint16_t port;
 
+    bool isSSL;
+
 public:
     HttpClient();
     ~HttpClient();
