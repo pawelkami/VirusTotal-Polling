@@ -91,7 +91,7 @@ void HttpClient::sendMsg(const HttpRequest &request)
 
     if(isSSL)
     {
-        if(SSL_write(conn, msg.c_str(), (int)msg.length()) < 0)
+        if(SSL_write(conn, msg.c_str(), (int)msg.length()) != (int)msg.length())
         {
             LOG_ERROR("Error SSLsending request.");
             return;
