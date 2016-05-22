@@ -11,13 +11,6 @@ Logger &Logger::getInstance()
 
 Logger::Logger()
 {
-    if(CONFIG.has("logfile_path"))
-    {
-        outFile.open(CONFIG.getValue("logfile_path"), std::ios::out | std::ios::app);
-    }
-    else
-        outFile.open(LOGFILENAME, std::ios::out | std::ios::app);
-
 }
 
 Logger::~Logger()
@@ -28,6 +21,7 @@ Logger::~Logger()
 
 void Logger::log(Level level, const std::string &message, char const* function)
 {
+    openLogFile();
     std::string lvl;
     switch(level)
     {
@@ -48,12 +42,21 @@ void Logger::log(Level level, const std::string &message, char const* function)
             break;
     }
 
-//    time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-//    std::string time(std::ctime(&now));
-//    time = time.substr(0, time.size()-1);
     outFile << currentDateTime() << lvl << " " << function << "() " << message << '\n';
-
+    outFile.close();
 }
+
+void Logger::openLogFile()
+{
+    if(CONFIG.has("logfile_path"))
+    {
+        outFile.open(CONFIG.getValue("logfile_path"), std::ios::out | std::ios::app);
+    }
+    else
+        outFile.open(LOGFILENAME, std::ios::out | std::ios::app);
+}
+
+
 
 
 

@@ -105,6 +105,7 @@ void VirusTotalLogic::sendFile()
 
     fileHash = json.getValue("md5");
     scan_id = json.getValue("scan_id");
+    LOG_INFO("Received md5 = " + fileHash + ", scan_id = " + scan_id);
 }
 
 std::string VirusTotalLogic::parseResults(const std::string &html)

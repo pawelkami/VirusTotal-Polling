@@ -29,6 +29,7 @@ private:
 
     std::ofstream outFile;
 
+    void openLogFile();
 public:
     static Logger& getInstance();
 
