@@ -196,6 +196,7 @@ std::string HttpClient::readData()
         if(line == "\r\n")
             break;
 
+
     } while(true);
 
     if(chunked)
@@ -222,7 +223,6 @@ std::string HttpClient::readChunked()
 
         while(chunkSize > 0)
         {
-
             line = readLine();
             chunkSize -= line.size();
             answer += line;
