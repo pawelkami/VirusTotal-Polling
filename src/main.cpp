@@ -18,7 +18,9 @@ int main(int argc, char** argv)
 
     if (vm.count("cycles"))
     {
-//        Tryb z cyklicznym skanowaniem
+        VirusTotalLogic vtl;
+        vtl.initializeConnection();
+        vtl.getCyclicReport(filePath, vm.count("cycles"));
     }
     else
     {
@@ -30,6 +32,7 @@ int main(int argc, char** argv)
         std::string results = vtl.parseResults(html);
         vtl.saveResultsToFile(results);
     }
+
 	return 0;
 }
 

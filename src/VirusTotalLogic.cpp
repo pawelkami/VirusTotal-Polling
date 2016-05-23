@@ -294,11 +294,25 @@ void VirusTotalLogic::getContentFromAddress(const std::string &address, std::str
     }
 }
 
+void VirusTotalLogic::getCyclicReport(const std::string filePath, int numberOfCycles)
+{
+    struct itimerval timer;
+    /* Initial timeout value */
+    timer.it_value.tv_sec = 0;
+    timer.it_value.tv_usec = 250000;
 
+    /* We want a repetitive timer */
+    timer.it_interval.tv_sec = 60; //60 * std::stoi(CONFIG.getValue("polling_interval_minutes_default"));
+    timer.it_interval.tv_usec = 0;
 
+    signal(SIGALRM, &handleSignal);
+    setitimer(ITIMER_REAL, &timer, NULL);
+}
 
-
-
+void VirusTotalLogic::handleSignal(int signum)
+{
+    std::cout << "Dupa" << std::endl;
+}
 
 
 
