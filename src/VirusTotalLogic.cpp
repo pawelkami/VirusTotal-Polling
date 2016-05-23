@@ -79,7 +79,6 @@ std::string VirusTotalLogic::getReport()
             "&scan_id=" + scan_id);
     request.putHeader("content-length", "0");
 
-    std::string permalink = "";
     while(true)
     {
         http.sendMsg(request);
@@ -87,34 +86,34 @@ std::string VirusTotalLogic::getReport()
 
         std::string responseBody = response.getBody();
 
-        unsigned long jsonStart = responseBody.find_first_of("{");
-        unsigned long jsonEnd = responseBody.find_last_of("}");
+        size_t jsonStart = responseBody.find_first_of("{");
+        size_t jsonEnd = responseBody.find_last_of("}");
+
+        if (jsonStart == std::string::npos || jsonEnd == std::string::npos)
+        {
+            LOG_ERROR("Invalid response body");
+            throw RequestException("Invalid response body");
+        }
 
         JsonObject json;
         json.init(responseBody.substr(jsonStart, jsonEnd - jsonStart + 1));
         std::string responseCode = json.getValue("response_code");
         if (responseCode == "1")
         {
+            permalink = json.getValue("permalink");
             break;
         }
         else
         {
-            // Może coś mądrzejszego da się wymiślić.
             sleep(15);
         }
     }
 
-    std::string analysisId = scan_id.substr(scan_id.find_first_of('-') + 1, std::string::npos);
+    std::string html;
 
-    HttpRequest getPageRequest;
-    getPageRequest.putRequest(GET, "/en/file/" + fileHash + "/analysis/" + analysisId + "/");
-    getPageRequest.putHeader("host", "www.virustotal.com");
-    getPageRequest.putHeader("content-length", "0");
+    getContentFromAddress(permalink, html);
 
-    http.sendMsg(getPageRequest);
-    HttpResponse response = http.receiveResponse();
-
-    return response.getBody();
+    return html;
 }
 
 void VirusTotalLogic::sendFile()
@@ -152,6 +151,32 @@ void VirusTotalLogic::sendFile()
     scan_id = json.getValue("scan_id");
     permalink = json.getValue("permalink");
     LOG_INFO("Received sha256 = " + fileHash + ", scan_id = " + scan_id);
+}
+
+void VirusTotalLogic::rescan()
+{
+    HttpRequest request;
+    request.putRequest(POST, CONFIG.getValue("rescan_url") + "?resource=" + fileHash + "&apikey=" + CONFIG.getValue("apikey"));
+    request.putHeader("content-length", "0");
+
+    http.sendMsg(request);
+    HttpResponse response = http.receiveResponse();
+
+    std::string responseBody = response.getBody();
+
+    size_t jsonStart = responseBody.find_first_of("{");
+    size_t jsonEnd = responseBody.find_last_of("}");
+
+    if (jsonStart == std::string::npos || jsonEnd == std::string::npos)
+    {
+        LOG_ERROR("Invalid response body");
+        throw RequestException("Invalid response body");
+    }
+
+    JsonObject json;
+    json.init(responseBody.substr(jsonStart, jsonEnd - jsonStart + 1));
+    scan_id = json.getValue("scan_id");
+    permalink = json.getValue("permalink");
 }
 
 std::string VirusTotalLogic::parseResults(const std::string &html)
@@ -206,7 +231,11 @@ void VirusTotalLogic::saveResultsToFile(const std::string &results)
     }
 
     if(!resultsPath.empty())
-        mkdir(resultsPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        if(mkdir(resultsPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1)
+        {
+            LOG_ERROR("Failed creating directory " + resultsPath + ", error: " + std::string(strerror(errno)));
+            resultsPath = "";
+        }
 
     std::string filename =  resultsPath + virusPath.substr(virusPath.find_last_of('/') + 1, virusPath.size());
 
@@ -232,9 +261,6 @@ void VirusTotalLogic::setVirusPath(const std::string &path)
 {
     virusPath = path;
 }
-
-
-
 
 void VirusTotalLogic::getContentFromAddress(const std::string &address, std::string &result)
 {
@@ -268,16 +294,25 @@ void VirusTotalLogic::getContentFromAddress(const std::string &address, std::str
     }
 }
 
-std::string VirusTotalLogic::getPermaLink()
+void VirusTotalLogic::getCyclicReport(const std::string filePath, int numberOfCycles)
 {
-    return permalink;
+    struct itimerval timer;
+    /* Initial timeout value */
+    timer.it_value.tv_sec = 0;
+    timer.it_value.tv_usec = 250000;
+
+    /* We want a repetitive timer */
+    timer.it_interval.tv_sec = 60; //60 * std::stoi(CONFIG.getValue("polling_interval_minutes_default"));
+    timer.it_interval.tv_usec = 0;
+
+    signal(SIGALRM, &handleSignal);
+    setitimer(ITIMER_REAL, &timer, NULL);
 }
 
-
-
-
-
-
+void VirusTotalLogic::handleSignal(int signum)
+{
+    std::cout << "Dupa" << std::endl;
+}
 
 
 

@@ -4,25 +4,34 @@
 
 #include <string>
 #include "HttpClient.h"
+#include <pthread.h>
+#include <stdio.h>
+#include <signal.h>
+#include <sys/time.h>
+#include <stdlib.h>
+#include <signal.h>
+#include <time.h>
 
 class VirusTotalLogic
 {
 private:
-    std::string boundary = "@@@BOUNDARY@@@";
+    std::string encodeData(const std::string& filePath);
+
+    void getContentFromAddress(const std::string &address, std::string &result);
+
+    std::string getContentType();
+
     std::string getFilename(const std::string& filePath);
+    static void handleSignal(int signum);
     HttpClient http;
 
-    std::string virusPath;
+    std::string boundary = "@@@BOUNDARY@@@";
     std::string fileHash;
     std::string scan_id;
     std::string permalink;
+    std::string virusPath;
 
 public:
-    void setVirusPath(const std::string& path);
-
-    std::string encodeData(const std::string& filePath);
-
-    std::string getContentType();
 
     std::string getReport();
 
@@ -32,12 +41,13 @@ public:
 
     std::string parseResults(const std::string& html);
 
+    void rescan();
+
     void saveResultsToFile(const std::string& results);
 
-    void getContentFromAddress(const std::string &address, std::string &result);
+    void setVirusPath(const std::string& path);
 
-    std::string getPermaLink();
-
+    void getCyclicReport(const std::string filePath, int numberOfCycles);
 };
 
 
