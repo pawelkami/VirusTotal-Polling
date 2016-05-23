@@ -1,5 +1,7 @@
 #include "HttpClient.h"
 #include "exception/HttpClientException.h"
+#include "Utils.h"
+#include <memory>
 
 void HttpClient::init()
 {
@@ -105,7 +107,170 @@ void HttpClient::sendMsg(const HttpRequest &request)
     }
 }
 
+//HttpResponse HttpClient::receiveResponse()
+//{
+//    std::string answer;
+//    int size_recv , total_size= 0;
+//    struct timeval begin , now;
+//    char answ[RCV_BUF_SIZE];
+//    double timediff;
+//
+//    memset(answ, 0, sizeof(answ));
+//    //make socket non blocking
+//    fcntl(sock, F_SETFL, O_NONBLOCK);
+//    //beginning time
+//    gettimeofday(&begin , NULL);
+//
+//    while(1)
+//    {
+//        gettimeofday(&now , NULL);
+//
+//        timediff = (now.tv_sec - begin.tv_sec) + 1e-6 * (now.tv_usec - begin.tv_usec);
+//
+//        if( total_size > 0 && timediff > TIMEOUT )
+//            break;
+//        else if( timediff > TIMEOUT*2)
+//            break;
+//
+//
+//        memset(answ, 0 , sizeof(answ));  //clear the variable
+//        if(isSSL)
+//        {
+//            if((size_recv =  SSL_read(conn, answ, sizeof(answ)) ) < 0)
+//            {
+//                usleep(100000);
+//            }
+//            else
+//            {
+//                total_size += size_recv;
+//                answer += std::string(answ);
+//                gettimeofday(&begin , NULL);
+//            }
+//        }
+//        else
+//        {
+//            if((size_recv =  (int)recv(sock, answ , sizeof(answ), 0) ) < 0)
+//            {
+//                usleep(100000);
+//            }
+//            else
+//            {
+//                total_size += size_recv;
+//                answer += std::string(answ);
+//                gettimeofday(&begin , NULL);
+//            }
+//        }
+//    }
+//
+//    return HttpResponse(answer);
+//}
+
 HttpResponse HttpClient::receiveResponse()
+{
+    std::string answer;
+
+    //make socket non blocking
+    fcntl(sock, F_SETFL, O_NONBLOCK);
+
+    answer = readData();
+    return HttpResponse(answer);
+}
+
+
+
+std::string HttpClient::readData()
+{
+    bool chunked = false;
+
+    std::string line;
+    std::string answer;
+    bool wasAnything = false;
+
+    // wczytywanie headerow
+    do{
+        line = readLine();
+        std::cout << line;
+        answer += line;
+        if(line.find("chunked") != std::string::npos)
+            chunked = true;
+
+        if(line == "\r\n" && wasAnything)
+            break;
+
+        wasAnything = true;
+
+    } while(true);
+
+    if(chunked)
+        answer.append(readChunked());
+    else
+        answer.append(readNormally());
+
+
+    return answer;
+}
+
+std::string HttpClient::readChunked()
+{
+    std::string answer;
+    int chunkSize, n;
+    std::string line;
+    do{
+        line = readLine();
+        if(line == "\r\n")
+            line = readLine();
+        chunkSize = hextodec(line.substr(0, line.find_first_of("\r")));
+        if(chunkSize == 0)
+            break;
+        char answ[chunkSize];
+
+        memset(answ, 0, chunkSize);
+        if((isSSL ? n = SSL_read(conn, answ, chunkSize) :  n = (int)recv( sock, answ, chunkSize, 0 ) ) > 0)
+        {
+            chunkSize -= n;
+            std::cout << n << std::endl << std::flush;
+            std::cout << answ << std::flush;
+            answer += std::string(answ);
+        }
+    } while(true);
+
+    return answer;
+}
+
+
+std::string HttpClient::readLine() {
+    int n;
+    std::string line;
+    char c = '\0';
+
+    while ( (isSSL ? n = SSL_read(conn, &c, 1) :  n = (int)recv( sock, &c, 1, 1 ) ) > 0 )
+    {
+
+        if ( c == '\r' )
+        {
+            line += c;
+
+            // peak for \n
+            if(isSSL)
+                n = SSL_read(conn, &c, 1);
+            else
+                n = (int)recv( sock, &c, 1, MSG_PEEK );
+
+            if ( ( n > 0 ) && ( c == '\n' ) )
+            {
+                if(!isSSL)
+                    n = (int)recv( sock, &c, 1, 1 );
+                line += c;
+                break; // end of line
+            }
+        }
+        line += c;
+    }
+
+    return line;
+}
+
+std::string HttpClient::readNormally()
 {
     std::string answer;
     int size_recv , total_size= 0;
@@ -159,6 +324,20 @@ HttpResponse HttpClient::receiveResponse()
             }
         }
     }
-
-    return HttpResponse(answer);
+    return answer;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

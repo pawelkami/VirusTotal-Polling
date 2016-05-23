@@ -11,5 +11,7 @@
 // format YYYY-MM-DD HH:mm:ss
 const std::string currentDateTime();
 
+unsigned int hextodec( const std::string &hex );
+
 
 #endif //VIRUSTOTAL_POLLING_UTILS_H

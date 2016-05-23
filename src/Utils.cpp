@@ -1,6 +1,7 @@
 
 
 #include <iostream>
+#include <sstream>
 #include "Utils.h"
 
 const std::string currentDateTime() {
@@ -12,4 +13,17 @@ const std::string currentDateTime() {
     strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
 
     return buf;
+}
+
+unsigned int hextodec( const std::string &hex )
+{
+
+    unsigned int dec;
+    std::stringstream ss;
+
+    ss << std::hex << hex;
+    ss >> dec;
+
+    return dec;
+
 }

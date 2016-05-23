@@ -34,6 +34,14 @@ private:
 
     bool isSSL;
 
+    std::string readData();
+
+    std::string readChunked();
+
+    std::string readNormally();
+
+    std::string readLine();
+
 public:
     HttpClient();
     ~HttpClient();
@@ -43,6 +51,7 @@ public:
     void sendMsg(const HttpRequest& request);
 
     HttpResponse receiveResponse();
+
 
 };
 
