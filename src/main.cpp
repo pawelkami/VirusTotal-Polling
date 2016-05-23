@@ -19,7 +19,6 @@ int main(int argc, char** argv)
     if (vm.count("cycles"))
     {
         VirusTotalLogic vtl;
-        vtl.initializeConnection();
         vtl.getCyclicReport(filePath, vm.count("cycles"));
     }
     else

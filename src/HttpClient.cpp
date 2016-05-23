@@ -77,12 +77,12 @@ HttpClient::HttpClient()
 
 HttpClient::~HttpClient()
 {
-    if(isSSL)
-    {
-        SSL_shutdown(conn);
-        SSL_free(conn);
-    }
-    close(sock);
+//    if(isSSL)
+//    {
+//        SSL_shutdown(conn);
+//        SSL_free(conn);
+//    }
+//    close(sock);
 }
 
 void HttpClient::sendMsg(const HttpRequest &request)

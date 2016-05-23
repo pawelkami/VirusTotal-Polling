@@ -10,6 +10,7 @@
 #include "Parser.h"
 #include "ResultsAnalyzer.h"
 
+VirusTotalLogic* VirusTotalLogic::instance;
 
 void VirusTotalLogic::initializeConnection()
 {
@@ -300,18 +301,34 @@ void VirusTotalLogic::getCyclicReport(const std::string filePath, int numberOfCy
     timer.it_value.tv_usec = 250000;
 
     /* We want a repetitive timer */
-    timer.it_interval.tv_sec = 60; //60 * std::stoi(CONFIG.getValue("polling_interval_minutes_default"));
+    timer.it_interval.tv_sec = 360; //60 * std::stoi(CONFIG.getValue("polling_interval_minutes_default"));
     timer.it_interval.tv_usec = 0;
 
-    signal(SIGALRM, &handleSignal);
+    setVirusPath(filePath);
+    setNumberOfCycles(numberOfCycles);
+
+    std::signal(SIGALRM, VirusTotalLogic::staticHandleSignal);
     setitimer(ITIMER_REAL, &timer, NULL);
 }
 
 void VirusTotalLogic::handleSignal(int signum)
 {
-    std::cout << "Dupa" << std::endl;
+    std::cout << "VIRUS ALLERT!!!" << std::endl;
+    initializeConnection();
+    rescan();
+    std::string html = getReport();
+    std::string results = parseResults(html);
+    saveResultsToFile(results);
 }
 
 
+void VirusTotalLogic::staticHandleSignal(int signum)
+{
+    instance->handleSignal(signum);
+}
 
+void VirusTotalLogic::setNumberOfCycles(int numberOfCycle)
+{
+    numberOfCycles = numberOfCycle;
+}
 

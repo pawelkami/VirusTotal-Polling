@@ -6,7 +6,7 @@
 #include "HttpClient.h"
 #include <pthread.h>
 #include <stdio.h>
-#include <signal.h>
+#include <csignal>
 #include <sys/time.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -22,7 +22,11 @@ private:
     std::string getContentType();
 
     std::string getFilename(const std::string& filePath);
-    static void handleSignal(int signum);
+
+    void handleSignal(int signum);
+
+    static void staticHandleSignal(int signum);
+
     HttpClient http;
 
     std::string boundary = "@@@BOUNDARY@@@";
@@ -30,8 +34,12 @@ private:
     std::string scan_id;
     std::string permalink;
     std::string virusPath;
+    int numberOfCycles;
+    static VirusTotalLogic *instance;
 
 public:
+
+    VirusTotalLogic() { instance = this; };
 
     std::string getReport();
 
@@ -46,6 +54,8 @@ public:
     void saveResultsToFile(const std::string& results);
 
     void setVirusPath(const std::string& path);
+
+    void setNumberOfCycles(int numberOfCycle);
 
     void getCyclicReport(const std::string filePath, int numberOfCycles);
 };
