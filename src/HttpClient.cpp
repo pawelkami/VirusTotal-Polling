@@ -164,19 +164,13 @@ std::string HttpClient::readChunk(int chunkSize)
 
     int bytesLeft = chunkSize;
 
-    if (isSSL)
+    while(bytesLeft != 0)
     {
-        while(bytesLeft != 0)
-        {
-            int bytesToRead = bytesLeft > RCV_BUF_SIZE ? RCV_BUF_SIZE : bytesLeft;
-            int n = SSL_read(conn, answ, bytesToRead);
-            bytesLeft -= n;
-            answer += answ;
-            memset(answ, 0, sizeof(answ));
-        }
-    }
-    else
-    {
+        int bytesToRead = bytesLeft > RCV_BUF_SIZE ? RCV_BUF_SIZE : bytesLeft;
+        int n = isSSL ? SSL_read(conn, answ, bytesToRead) : recv(sock, answ, bytesToRead, 0);
+        bytesLeft -= n;
+        answer += answ;
+        memset(answ, 0, sizeof(answ));
     }
     return answer;
 }
@@ -244,7 +238,7 @@ std::string HttpClient::readNotChunked(int contentLength)
     while(bytesLeft != 0)
     {
         int bytesToRead = bytesLeft > RCV_BUF_SIZE ? RCV_BUF_SIZE : bytesLeft;
-        int n = SSL_read(conn, answ, bytesToRead);
+        int n = isSSL ? SSL_read(conn, answ, bytesToRead) : recv(sock, answ, bytesToRead, 0);
         bytesLeft -= n;
         answer += answ;
         memset(answ, 0, sizeof(answ));
