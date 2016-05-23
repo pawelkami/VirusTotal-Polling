@@ -184,7 +184,6 @@ std::string HttpClient::readData()
 
     std::string line;
     std::string answer;
-    bool wasAnything = false;
 
     // wczytywanie headerow
     do{
@@ -194,10 +193,8 @@ std::string HttpClient::readData()
         if(line.find("chunked") != std::string::npos)
             chunked = true;
 
-        if(line == "\r\n" && wasAnything)
+        if(line == "\r\n")
             break;
-
-        wasAnything = true;
 
     } while(true);
 
@@ -222,15 +219,13 @@ std::string HttpClient::readChunked()
         chunkSize = hextodec(line.substr(0, line.find_first_of("\r")));
         if(chunkSize == 0)
             break;
-        char answ[chunkSize];
 
-        memset(answ, 0, chunkSize);
-        if((isSSL ? n = SSL_read(conn, answ, chunkSize) :  n = (int)recv( sock, answ, chunkSize, 0 ) ) > 0)
+        while(chunkSize > 0)
         {
-            chunkSize -= n;
-            std::cout << n << std::endl << std::flush;
-            std::cout << answ << std::flush;
-            answer += std::string(answ);
+
+            line = readLine();
+            chunkSize -= line.size();
+            answer += line;
         }
     } while(true);
 
@@ -250,7 +245,6 @@ std::string HttpClient::readLine() {
         {
             line += c;
 
-            // peak for \n
             if(isSSL)
                 n = SSL_read(conn, &c, 1);
             else
