@@ -38,7 +38,7 @@ private:
 
     std::string readChunked();
 
-    std::string readNormally();
+    std::string readNotChunked();
 
     std::string readLine();
 

@@ -202,7 +202,7 @@ std::string HttpClient::readData()
     if(chunked)
         answer.append(readChunked());
     else
-        answer.append(readNormally());
+        answer.append(readNotChunked());
 
 
     return answer;
@@ -265,7 +265,7 @@ std::string HttpClient::readLine() {
     return line;
 }
 
-std::string HttpClient::readNormally()
+std::string HttpClient::readNotChunked()
 {
     std::string answer;
     int size_recv , total_size= 0;
