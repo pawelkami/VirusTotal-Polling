@@ -225,6 +225,7 @@ std::string HttpClient::readChunked()
         {
             line = readLine();
             chunkSize -= line.size();
+            std::cout << line;
             answer += line;
         }
     } while(true);

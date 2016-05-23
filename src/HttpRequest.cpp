@@ -82,7 +82,7 @@ void HttpRequest::buildRequest(const std::string &req)
     while(std::getline(ss, temp) && temp.find(":") != std::string::npos)
     {
         std::string key = temp.substr(0, temp.find_first_of(":"));
-        std::string value = temp.substr(temp.find_first_of(" ") + 1, temp.size());
+        std::string value = temp.substr(temp.find_first_of(" ") + 1);
         putHeader(key, value);
     }
 

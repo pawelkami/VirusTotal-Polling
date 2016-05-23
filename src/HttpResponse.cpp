@@ -17,7 +17,7 @@ void HttpResponse::buildResponse(const std::string &response)
     while(std::getline(ss, temp) && temp.find(":") != std::string::npos)
     {
         std::string key = temp.substr(0, temp.find_first_of(":"));
-        std::string value = temp.substr(temp.find_first_of(" ") + 1, temp.size());
+        std::string value = temp.substr(temp.find_first_of(" ") + 1);
         putHeader(key, value);
     }
 
@@ -48,7 +48,7 @@ HttpResponse::HttpResponse(const std::string &response)
 std::string HttpResponse::getResponseCode()
 {
     std::string code;
-    code = response.substr(response.find_first_of(' ') + 1, response.size());
+    code = response.substr(response.find_first_of(' ') + 1);
     code = code.substr(0, code.find_first_of(' '));
     return code;
 }

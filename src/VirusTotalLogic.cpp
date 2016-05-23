@@ -229,15 +229,20 @@ void VirusTotalLogic::saveResultsToFile(const std::string &results)
     {
         resultsPath += '/';
     }
+    struct stat sb;
+
 
     if(!resultsPath.empty())
-        if(mkdir(resultsPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1)
+        if (!(stat(resultsPath.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode)))
         {
-            LOG_ERROR("Failed creating directory " + resultsPath + ", error: " + std::string(strerror(errno)));
-            resultsPath = "";
+            if(mkdir(resultsPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1)
+            {
+                LOG_WARNING("Failed creating directory " + resultsPath + ", error: " + std::string(strerror(errno)));
+                resultsPath = "";
+            }
         }
 
-    std::string filename =  resultsPath + virusPath.substr(virusPath.find_last_of('/') + 1, virusPath.size());
+    std::string filename =  resultsPath + virusPath.substr(virusPath.find_last_of('/') + 1);
 
     filename += currentDateTime() + ".txt";
 
@@ -248,7 +253,6 @@ void VirusTotalLogic::saveResultsToFile(const std::string &results)
     {
         LOG_ERROR("Failed opening file " + filename);
         throw FileException("Failed opening file " + filename);
-        return;
     }
 
     fout << results;
