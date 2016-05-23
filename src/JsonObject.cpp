@@ -20,7 +20,6 @@ std::string JsonObject::getValue(const std::string &key)
 {
     if (has(key))
     {
-        // Pewnie da się to sprytniej zrobić.
         if (key == "response_code")
         {
             return std::to_string((int)(json::Number(map[key])));

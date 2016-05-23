@@ -36,9 +36,11 @@ private:
 
     std::string readData();
 
+    std::string readChunk(int);
+
     std::string readChunked();
 
-    std::string readNotChunked();
+    std::string readNotChunked(int);
 
     std::string readLine();
 

@@ -86,17 +86,14 @@ std::string VirusTotalLogic::getReport()
 
         std::string responseBody = response.getBody();
 
-        size_t jsonStart = responseBody.find_first_of("{");
-        size_t jsonEnd = responseBody.find_last_of("}");
-
-        if (jsonStart == std::string::npos || jsonEnd == std::string::npos)
+        if (response.getResponseCode()[0] != '2')
         {
-            LOG_ERROR("Invalid response body");
-            throw RequestException("Invalid response body");
+            LOG_ERROR("Code " + response.getResponseCode() + " while trying to get report URL");
+            throw RequestException(response.getResponseCode());
         }
 
         JsonObject json;
-        json.init(responseBody.substr(jsonStart, jsonEnd - jsonStart + 1));
+        json.init(responseBody);
         std::string responseCode = json.getValue("response_code");
         if (responseCode == "1")
         {
@@ -105,9 +102,12 @@ std::string VirusTotalLogic::getReport()
         }
         else
         {
+            LOG_INFO("Scan not yet completed. Waiting 15 seconds.");
             sleep(15);
         }
     }
+
+    LOG_INFO("Scan completed");
 
     std::string html;
 
@@ -135,17 +135,9 @@ void VirusTotalLogic::sendFile()
     }
 
     std::string responseBody = response.getBody();
-    size_t jsonStart = responseBody.find_first_of("{");
-    size_t jsonEnd = responseBody.find_last_of("}");
-
-    if (jsonStart == std::string::npos || jsonEnd == std::string::npos)
-    {
-        LOG_ERROR("Invalid response body");
-        throw RequestException("Invalid response body");
-    }
 
     JsonObject json;
-    json.init(responseBody.substr(jsonStart, jsonEnd - jsonStart + 1));
+    json.init(responseBody);
 
     fileHash = json.getValue("sha256");
     scan_id = json.getValue("scan_id");
@@ -162,19 +154,18 @@ void VirusTotalLogic::rescan()
     http.sendMsg(request);
     HttpResponse response = http.receiveResponse();
 
-    std::string responseBody = response.getBody();
-
-    size_t jsonStart = responseBody.find_first_of("{");
-    size_t jsonEnd = responseBody.find_last_of("}");
-
-    if (jsonStart == std::string::npos || jsonEnd == std::string::npos)
+    if (response.getResponseCode()[0] != '2')
     {
-        LOG_ERROR("Invalid response body");
-        throw RequestException("Invalid response body");
+        LOG_ERROR("Response code " + response.getResponseCode() + " after sending rescan request");
+        throw RequestException(response.getResponseCode());
     }
 
+
+    std::string responseBody = response.getBody();
+
+
     JsonObject json;
-    json.init(responseBody.substr(jsonStart, jsonEnd - jsonStart + 1));
+    json.init(responseBody);
     scan_id = json.getValue("scan_id");
     permalink = json.getValue("permalink");
 }
@@ -291,7 +282,10 @@ void VirusTotalLogic::getContentFromAddress(const std::string &address, std::str
     if (r.getResponseCode() == "301")
         getContentFromAddress(r.getHeader("Location"), result);
     else if (r.getResponseCode() == "200")
+    {
         result = r.getBody();
+        LOG_INFO("Report downloaded");
+    }
     else
     {
         throw RequestException(r.getResponseCode());

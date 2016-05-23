@@ -107,71 +107,10 @@ void HttpClient::sendMsg(const HttpRequest &request)
     }
 }
 
-//HttpResponse HttpClient::receiveResponse()
-//{
-//    std::string answer;
-//    int size_recv , total_size= 0;
-//    struct timeval begin , now;
-//    char answ[RCV_BUF_SIZE];
-//    double timediff;
-//
-//    memset(answ, 0, sizeof(answ));
-//    //make socket non blocking
-//    fcntl(sock, F_SETFL, O_NONBLOCK);
-//    //beginning time
-//    gettimeofday(&begin , NULL);
-//
-//    while(1)
-//    {
-//        gettimeofday(&now , NULL);
-//
-//        timediff = (now.tv_sec - begin.tv_sec) + 1e-6 * (now.tv_usec - begin.tv_usec);
-//
-//        if( total_size > 0 && timediff > TIMEOUT )
-//            break;
-//        else if( timediff > TIMEOUT*2)
-//            break;
-//
-//
-//        memset(answ, 0 , sizeof(answ));  //clear the variable
-//        if(isSSL)
-//        {
-//            if((size_recv =  SSL_read(conn, answ, sizeof(answ)) ) < 0)
-//            {
-//                usleep(100000);
-//            }
-//            else
-//            {
-//                total_size += size_recv;
-//                answer += std::string(answ);
-//                gettimeofday(&begin , NULL);
-//            }
-//        }
-//        else
-//        {
-//            if((size_recv =  (int)recv(sock, answ , sizeof(answ), 0) ) < 0)
-//            {
-//                usleep(100000);
-//            }
-//            else
-//            {
-//                total_size += size_recv;
-//                answer += std::string(answ);
-//                gettimeofday(&begin , NULL);
-//            }
-//        }
-//    }
-//
-//    return HttpResponse(answer);
-//}
 
 HttpResponse HttpClient::receiveResponse()
 {
     std::string answer;
-
-    //make socket non blocking
-    fcntl(sock, F_SETFL, O_NONBLOCK);
-
     answer = readData();
     return HttpResponse(answer);
 }
@@ -185,51 +124,84 @@ std::string HttpClient::readData()
     std::string line;
     std::string answer;
 
-    // wczytywanie headerow
+    int contentLength = 0;
+
+    // Reading headers
     do{
         line = readLine();
-        std::cout << line;
         answer += line;
         if(line.find("chunked") != std::string::npos)
             chunked = true;
+        else if (line.find("Content-Length") != std::string::npos)
+        {
+            contentLength = stoi((line.substr(line.find_first_of(":") + 1, std::string::npos)));
+        }
 
         if(line == "\r\n")
+        {
             break;
+        }
 
 
     } while(true);
 
     if(chunked)
-        answer.append(readChunked());
+        answer += readChunked();
     else
-        answer.append(readNotChunked());
+        answer.append(readNotChunked(contentLength));
 
 
+    return answer;
+}
+
+std::string HttpClient::readChunk(int chunkSize)
+{
+    std::string answer;
+    char answ[RCV_BUF_SIZE];
+
+    memset(answ, 0, sizeof(answ));
+
+
+    int bytesLeft = chunkSize;
+
+    if (isSSL)
+    {
+        while(bytesLeft != 0)
+        {
+            int bytesToRead = bytesLeft > RCV_BUF_SIZE ? RCV_BUF_SIZE : bytesLeft;
+            int n = SSL_read(conn, answ, bytesToRead);
+            bytesLeft -= n;
+            answer += answ;
+            memset(answ, 0, sizeof(answ));
+        }
+    }
+    else
+    {
+    }
     return answer;
 }
 
 std::string HttpClient::readChunked()
 {
     std::string answer;
-    int chunkSize, n;
+    int chunkSize;
     std::string line;
-    do{
+    line = readLine();
+    if(line == "\r\n")
         line = readLine();
-        if(line == "\r\n")
-            line = readLine();
-        chunkSize = hextodec(line.substr(0, line.find_first_of("\r")));
-        if(chunkSize == 0)
-            break;
+    chunkSize = hextodec(line.substr(0, line.find_first_of("\r")));
 
-        while(chunkSize > 0)
+    while (chunkSize > 0)
+    {
+        answer += readChunk(chunkSize);
+        line = readLine();
+        if (line == "\r\n")
         {
             line = readLine();
-            chunkSize -= line.size();
-            std::cout << line;
-            answer += line;
         }
-    } while(true);
-
+        chunkSize = hextodec(line.substr(0, line.find_first_of("\r")));
+    }
+    readLine();
     return answer;
 }
 
@@ -241,7 +213,6 @@ std::string HttpClient::readLine() {
 
     while ( (isSSL ? n = SSL_read(conn, &c, 1) :  n = (int)recv( sock, &c, 1, 1 ) ) > 0 )
     {
-
         if ( c == '\r' )
         {
             line += c;
@@ -250,7 +221,6 @@ std::string HttpClient::readLine() {
                 n = SSL_read(conn, &c, 1);
             else
                 n = (int)recv( sock, &c, 1, MSG_PEEK );
-
             if ( ( n > 0 ) && ( c == '\n' ) )
             {
                 if(!isSSL)
@@ -261,78 +231,23 @@ std::string HttpClient::readLine() {
         }
         line += c;
     }
-
     return line;
 }
 
-std::string HttpClient::readNotChunked()
+std::string HttpClient::readNotChunked(int contentLength)
 {
+    int bytesLeft = contentLength;
     std::string answer;
-    int size_recv , total_size= 0;
-    struct timeval begin , now;
     char answ[RCV_BUF_SIZE];
-    double timediff;
 
     memset(answ, 0, sizeof(answ));
-    //make socket non blocking
-    fcntl(sock, F_SETFL, O_NONBLOCK);
-    //beginning time
-    gettimeofday(&begin , NULL);
-
-    while(1)
+    while(bytesLeft != 0)
     {
-        gettimeofday(&now , NULL);
-
-        timediff = (now.tv_sec - begin.tv_sec) + 1e-6 * (now.tv_usec - begin.tv_usec);
-
-        if( total_size > 0 && timediff > TIMEOUT )
-            break;
-        else if( timediff > TIMEOUT*2)
-            break;
-
-
-        memset(answ, 0 , sizeof(answ));  //clear the variable
-        if(isSSL)
-        {
-            if((size_recv =  SSL_read(conn, answ, sizeof(answ)) ) < 0)
-            {
-                usleep(100000);
-            }
-            else
-            {
-                total_size += size_recv;
-                answer += std::string(answ);
-                gettimeofday(&begin , NULL);
-            }
-        }
-        else
-        {
-            if((size_recv =  (int)recv(sock, answ , sizeof(answ), 0) ) < 0)
-            {
-                usleep(100000);
-            }
-            else
-            {
-                total_size += size_recv;
-                answer += std::string(answ);
-                gettimeofday(&begin , NULL);
-            }
-        }
+        int bytesToRead = bytesLeft > RCV_BUF_SIZE ? RCV_BUF_SIZE : bytesLeft;
+        int n = SSL_read(conn, answ, bytesToRead);
+        bytesLeft -= n;
+        answer += answ;
+        memset(answ, 0, sizeof(answ));
     }
     return answer;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
