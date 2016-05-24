@@ -4,6 +4,7 @@
 
 #include <string>
 #include "HttpClient.h"
+#include "HttpServer.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <csignal>
@@ -25,7 +26,9 @@ private:
 
     void handleSignal(int signum);
 
-    HttpClient http;
+    HttpClient client;
+
+    HttpServer server;
 
     std::string boundary = "@@@BOUNDARY@@@";
 
@@ -40,6 +43,8 @@ public:
     VirusTotalLogic() { instance = this; };
 
     std::string getReport();
+
+    void initializeServer();
 
     void initializeConnection();
 

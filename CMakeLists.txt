@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(VirusTotal_Polling)
 
+find_package (Threads)
+
 find_package(PkgConfig REQUIRED)
 pkg_search_module(OPENSSL REQUIRED openssl)
 
@@ -31,7 +33,7 @@ include_directories(
 set(SOURCE_FILES
         src/Configuration.cpp
         src/Configuration.h
-        src/main.cpp src/Logger.cpp src/Logger.h src/HttpClient.cpp src/HttpClient.h src/HttpRequest.cpp src/HttpRequest.h src/JsonObject.cpp src/JsonObject.h src/VirusTotalLogic.cpp src/VirusTotalLogic.h src/Utils.h src/Utils.cpp src/HttpResponse.cpp src/HttpResponse.h src/exception/HttpClientException.h src/exception/RequestException.h src/exception/FileException.h)
+        src/main.cpp src/Logger.cpp src/Logger.h src/HttpClient.cpp src/HttpClient.h src/HttpRequest.cpp src/HttpRequest.h src/JsonObject.cpp src/JsonObject.h src/VirusTotalLogic.cpp src/VirusTotalLogic.h src/Utils.h src/Utils.cpp src/HttpResponse.cpp src/HttpResponse.h src/exception/HttpClientException.h src/exception/RequestException.h src/exception/FileException.h src/HttpServer.cpp src/HttpServer.h)
 
 set(PROJECT_LINK_LIBS
         ${CMAKE_CURRENT_SOURCE_DIR}/external_libraries/TKOM)
@@ -39,7 +41,7 @@ set(PROJECT_LINK_LIBS
 
 add_executable(VirusTotal_Polling ${SOURCE_FILES})
 
-target_link_libraries(VirusTotal_Polling htmlparser ${OPENSSL_LIBRARIES})
+target_link_libraries(VirusTotal_Polling htmlparser ${OPENSSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
