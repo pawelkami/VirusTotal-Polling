@@ -53,7 +53,7 @@ public:
 
     void setVirusPath(const std::string& path);
 
-    void getCyclicReport(const std::string filePath);
+    void getCyclicReport(const std::string& filePath);
 
 };
 

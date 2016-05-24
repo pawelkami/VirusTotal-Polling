@@ -293,7 +293,7 @@ void VirusTotalLogic::getContentFromAddress(const std::string &address, std::str
     }
 }
 
-void VirusTotalLogic::getCyclicReport(const std::string filePath)
+void VirusTotalLogic::getCyclicReport(const std::string& filePath)
 {
     struct itimerval timer;
     /* Initial timeout value */
