@@ -146,7 +146,7 @@ std::string HttpClient::readData()
     } while(true);
 
     if(chunked)
-        answer += readChunked();
+        answer.append(readChunked());
     else
         answer.append(readNotChunked(contentLength));
 

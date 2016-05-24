@@ -8,28 +8,28 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <stdlib.h>
+#include <string>
 
 class HttpServer
 {
 private:
 
-    int socket_desc;
-    int new_socket;
-    int c;
-    int *new_sock;
+    int socketListen;
     struct sockaddr_in server;
     struct sockaddr_in client;
-    char *message;
+
+    void initialize();
 
 public:
 
     HttpServer();
+    ~HttpServer();
 
-    static void *connection_handler(void *socket_desc);
+    static void *connectionHandler(void *socket_desc);
+    static void handleMessage(const std::string& message);
 
-    void reply();
+    void reply(int newSocket);
 
-    void initialize();
 
     void startServer();
 

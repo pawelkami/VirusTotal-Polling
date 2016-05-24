@@ -12,11 +12,6 @@
 
 VirusTotalLogic* VirusTotalLogic::instance;
 
-void VirusTotalLogic::initializeServer()
-{
-    server.initialize();
-    server.startServer();
-}
 
 void VirusTotalLogic::initializeConnection()
 {
