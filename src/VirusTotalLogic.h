@@ -25,19 +25,17 @@ private:
 
     void handleSignal(int signum);
 
-    static void staticHandleSignal(int signum);
-
     HttpClient http;
 
     std::string boundary = "@@@BOUNDARY@@@";
+
     std::string fileHash;
     std::string scan_id;
     std::string permalink;
     std::string virusPath;
-    int numberOfCycles;
     static VirusTotalLogic *instance;
-
 public:
+    static void staticHandleSignal(int signum);
 
     VirusTotalLogic() { instance = this; };
 
@@ -55,9 +53,8 @@ public:
 
     void setVirusPath(const std::string& path);
 
-    void setNumberOfCycles(int numberOfCycle);
+    void getCyclicReport(const std::string filePath);
 
-    void getCyclicReport(const std::string filePath, int numberOfCycles);
 };
 
 

@@ -293,7 +293,7 @@ void VirusTotalLogic::getContentFromAddress(const std::string &address, std::str
     }
 }
 
-void VirusTotalLogic::getCyclicReport(const std::string filePath, int numberOfCycles)
+void VirusTotalLogic::getCyclicReport(const std::string filePath)
 {
     struct itimerval timer;
     /* Initial timeout value */
@@ -301,11 +301,10 @@ void VirusTotalLogic::getCyclicReport(const std::string filePath, int numberOfCy
     timer.it_value.tv_usec = 250000;
 
     /* We want a repetitive timer */
-    timer.it_interval.tv_sec = 360; //60 * std::stoi(CONFIG.getValue("polling_interval_minutes_default"));
+    timer.it_interval.tv_sec = 60 * std::stoi(CONFIG.getValue("polling_interval_minutes_default"));
     timer.it_interval.tv_usec = 0;
 
     setVirusPath(filePath);
-    setNumberOfCycles(numberOfCycles);
 
     std::signal(SIGALRM, VirusTotalLogic::staticHandleSignal);
     setitimer(ITIMER_REAL, &timer, NULL);
@@ -313,7 +312,7 @@ void VirusTotalLogic::getCyclicReport(const std::string filePath, int numberOfCy
 
 void VirusTotalLogic::handleSignal(int signum)
 {
-    std::cout << "VIRUS ALLERT!!!" << std::endl;
+//    std::cout << "VIRUS ALLERT!!!" << std::endl;
     initializeConnection();
     rescan();
     std::string html = getReport();
@@ -326,9 +325,3 @@ void VirusTotalLogic::staticHandleSignal(int signum)
 {
     instance->handleSignal(signum);
 }
-
-void VirusTotalLogic::setNumberOfCycles(int numberOfCycle)
-{
-    numberOfCycles = numberOfCycle;
-}
-

@@ -4,11 +4,14 @@
 #include "Logger.h"
 #include "HttpClient.h"
 #include "VirusTotalLogic.h"
+#include <boost/asio.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 using namespace std;
 namespace po = boost::program_options;
 
 po::variables_map handleParameters(int argc, char **argv);
+void handler(const boost::system::error_code &ec);
 
 int main(int argc, char** argv)
 {
@@ -19,7 +22,12 @@ int main(int argc, char** argv)
     if (vm.count("cycles"))
     {
         VirusTotalLogic vtl;
-        vtl.getCyclicReport(filePath, vm.count("cycles"));
+        vtl.getCyclicReport(filePath);
+        boost::asio::io_service io;
+        boost::asio::deadline_timer t(io);
+        t.expires_from_now(boost::posix_time::seconds(std::stoi(CONFIG.getValue("polling_interval_minutes_default")) * vm.count("cycles") * 60));
+        t.async_wait(handler);
+        io.run();
     }
     else
     {
@@ -75,4 +83,9 @@ po::variables_map handleParameters(int argc, char **argv)
         exit(0);
     }
     return vm;
+}
+
+void handler(const boost::system::error_code &ec)
+{
+    std::cout << boost::posix_time::microsec_clock::local_time() << " Koniec cyklicznej pracy programu." << std::endl;
 }
