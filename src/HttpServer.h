@@ -9,24 +9,24 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <string>
+#include "HttpConnection.h"
 
-class HttpServer
+class HttpServer : public HttpConnection
 {
 private:
 
-    int socketListen;
-    struct sockaddr_in server;
-    struct sockaddr_in client;
-
-    void initialize();
-
-public:
 
     HttpServer();
+public:
+    static HttpServer& getInstance();
+
     ~HttpServer();
+    void init();
 
     static void *connectionHandler(void *socket_desc);
-    static void handleMessage(const std::string& message);
+
+    bool handleMessage(const std::string& message);
+
 
     void reply(int newSocket);
 

@@ -83,7 +83,7 @@ std::string VirusTotalLogic::getReport()
 
     while(true)
     {
-        client.sendMsg(request);
+        client.sendMsg(request.getRequest());
         HttpResponse response = client.receiveResponse();
 
         std::string responseBody = response.getBody();
@@ -127,7 +127,7 @@ void VirusTotalLogic::sendFile()
     request.putHeader("content-length", std::to_string(body.size()));
     request.putBody(body);
 
-    client.sendMsg(request);
+    client.sendMsg(request.getRequest());
     HttpResponse response = client.receiveResponse();
 
     if (response.getResponseCode()[0] != '2')
@@ -153,7 +153,7 @@ void VirusTotalLogic::rescan()
     request.putRequest(POST, CONFIG.getValue("rescan_url") + "?resource=" + fileHash + "&apikey=" + CONFIG.getValue("apikey"));
     request.putHeader("content-length", "0");
 
-    client.sendMsg(request);
+    client.sendMsg(request.getRequest());
     HttpResponse response = client.receiveResponse();
 
     if (response.getResponseCode()[0] != '2')
@@ -278,7 +278,7 @@ void VirusTotalLogic::getContentFromAddress(const std::string &address, std::str
     HttpRequest req;
     req.putRequest(HttpMethod::GET, relativePath);
     req.putHeader("host", CONFIG.getValue("host"));
-    client.sendMsg(req);
+    client.sendMsg(req.getRequest());
     HttpResponse r = client.receiveResponse();
     LOG_DEBUG(r.getResponseCode() + ", " + r.getHeader("Location"));
     if (r.getResponseCode() == "301")

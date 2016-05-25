@@ -8,55 +8,45 @@ HttpServer::HttpServer()
 
 }
 
-void* HttpServer::connectionHandler(void *socket_desc)
+void* HttpServer::connectionHandler(void *sock)
 {
-    //Get the socket descriptor
-    int sock = *(int*)socket_desc;
-    int read_size;
-    char *message , clientMessage[2000];
-
+    int socketClient = *(int*)sock;
+    HttpServer server = HttpServer::getInstance();
     //Send some messages to the client
-    message = "Greetings! I am your connection handler\n";
-    write(sock , message , strlen(message));
+    char* message = "Greetings! I am your connection handler\n";
+    server.sendMsg(message, socketClient);
 
     message = "Now type something and i shall repeat what you type \n";
-    write(sock , message , strlen(message));
+    HttpServer::getInstance().sendMsg(message, socketClient);
 
-    //Receive a message from client
-    while( (read_size = recv(sock , clientMessage , 2000 , 0)) > 0 )
+    std::string clientMessage = server.receiveMsg(socketClient);
+    HttpRequest request(clientMessage);
+
+    std::cout << clientMessage << std::endl;
+    if(!server.handleMessage(request.getBody()))
     {
-        //Send the message back to client
-        write(sock , clientMessage , strlen(clientMessage));
+        LOG_ERROR("Received bad Http Request");
+        // TODO powiedziec o bledzie klientowi
     }
 
-    if(read_size == 0)
-    {
-        puts("Client disconnected");
-        fflush(stdout);
-    }
-    else if(read_size == -1)
-    {
-        perror("recv failed");
-    }
-
-    handleMessage(clientMessage);
+    // TODO odpowiedziec klientowi
 
     return 0;
 }
 
-void HttpServer::initialize()
+void HttpServer::init()
 {
-    socketListen = socket(AF_INET , SOCK_STREAM , 0);
-    if (socketListen == -1)
+    sock = socket(AF_INET , SOCK_STREAM , 0);
+    if (sock == -1)
     {
         printf("Could not create socket");
     }
-
+    sockaddr_in server;
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
     server.sin_port = htons( 8888 );    // port do wyedytowania TODO
 
-    if( bind(socketListen,(struct sockaddr *)&server , sizeof(server)) < 0)
+    if( bind(sock,(struct sockaddr *)&server , sizeof(server)) < 0)
     {
         puts("bind failed");
         return;
@@ -66,14 +56,15 @@ void HttpServer::initialize()
 
 void HttpServer::startServer()
 {
-    initialize();
-    listen(socketListen , 3);
+    init();
+    listen(sock, 3);
 
     //Accept and incoming connection
     puts("Waiting for incoming connections...");
     int c = sizeof(struct sockaddr_in);
     int newSocket;
-    while( (newSocket = accept(socketListen, (struct sockaddr *)&client, (socklen_t*)&c)) )
+    sockaddr_in client;
+    while( (newSocket = accept(sock, (struct sockaddr *)&client, (socklen_t*)&c)) )
     {
         puts("Connection accepted");
 
@@ -91,7 +82,7 @@ void HttpServer::startServer()
 void HttpServer::reply(int newSocket)
 {
     char *message = "Hello Client , I have received your connection. And now I will assign a handler for you\n";
-    write(newSocket , message , strlen(message));
+    HttpServer::getInstance().sendMsg(message, newSocket);
 
     pthread_t sniffer_thread;
 
@@ -106,17 +97,18 @@ void HttpServer::reply(int newSocket)
 
 HttpServer::~HttpServer()
 {
-    close(socketListen);
+    close(sock);
 }
 
-void HttpServer::handleMessage(const std::string &message)
+bool HttpServer::handleMessage(const std::string &message)
 {
     JsonObject json;
+
     json.init(message);
     if(!json.has("type"))
     {
         LOG_ERROR("Received JSON does not contain 'type'");
-        return; // TODO throw
+        return false; // TODO throw
     }
 
     std::string type = json.getValue("type");
@@ -131,7 +123,17 @@ void HttpServer::handleMessage(const std::string &message)
         // TODO obsluga zwykla i cykliczna
     }
 
+    return true;
+
 }
+
+HttpServer &HttpServer::getInstance()
+{
+    static HttpServer server;
+    return server;
+}
+
+
 
 
 
