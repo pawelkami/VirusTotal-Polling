@@ -9,8 +9,10 @@
 #include <csignal>
 #include <sys/time.h>
 #include <stdlib.h>
-#include <signal.h>
 #include <time.h>
+#include <boost/asio.hpp>
+#include <boost/bind.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 class VirusTotalLogic
 {
@@ -23,8 +25,6 @@ private:
 
     std::string getFilename(const std::string& filePath);
 
-    void handleSignal(int signum);
-
     HttpClient client;
 
     std::string boundary = "@@@BOUNDARY@@@";
@@ -33,11 +33,18 @@ private:
     std::string scan_id;
     std::string permalink;
     std::string virusPath;
+    int numberOfCycles;
+    int iterator;
+    boost::posix_time::seconds *inter;
+    boost::asio::deadline_timer *timer;
+    boost::asio::io_service ioService;
     static VirusTotalLogic *instance;
-public:
-    static void staticHandleSignal(int signum);
 
-    VirusTotalLogic() { instance = this; };
+public:
+
+    VirusTotalLogic() { iterator = 0; instance = this; }
+
+    ~VirusTotalLogic();
 
     std::string getReport();
 
@@ -53,7 +60,9 @@ public:
 
     void setVirusPath(const std::string& path);
 
-    void getCyclicReport(const std::string& filePath);
+    void getCyclicReport(const std::string& filePath, int interval, int numberOfCycles);
+
+    static void tick(const boost::system::error_code& /*e*/);
 
 };
 

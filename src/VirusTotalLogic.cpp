@@ -10,8 +10,7 @@
 #include "Parser.h"
 #include "ResultsAnalyzer.h"
 
-VirusTotalLogic* VirusTotalLogic::instance;
-
+VirusTotalLogic *VirusTotalLogic::instance;
 
 void VirusTotalLogic::initializeConnection()
 {
@@ -73,6 +72,12 @@ std::string VirusTotalLogic::getFilename(const std::string& filePath)
     unsigned long slashIndex = filePath.find_last_of("/");
     return filePath.substr(slashIndex + 1, std::string::npos);
 }
+
+VirusTotalLogic::~VirusTotalLogic()
+{
+    delete(timer);
+}
+
 
 std::string VirusTotalLogic::getReport()
 {
@@ -162,9 +167,7 @@ void VirusTotalLogic::rescan()
         throw RequestException(response.getResponseCode());
     }
 
-
     std::string responseBody = response.getBody();
-
 
     JsonObject json;
     json.init(responseBody);
@@ -294,35 +297,26 @@ void VirusTotalLogic::getContentFromAddress(const std::string &address, std::str
     }
 }
 
-void VirusTotalLogic::getCyclicReport(const std::string& filePath)
+void VirusTotalLogic::getCyclicReport(const std::string& filePath, int interval, int numberOfCycles)
 {
-    struct itimerval timer;
-    /* Initial timeout value */
-    timer.it_value.tv_sec = 0;
-    timer.it_value.tv_usec = 250000;
-
-    /* We want a repetitive timer */
-    timer.it_interval.tv_sec = 60 * std::stoi(CONFIG.getValue("polling_interval_minutes_default"));
-    timer.it_interval.tv_usec = 0;
-
-    setVirusPath(filePath);
-
-    std::signal(SIGALRM, VirusTotalLogic::staticHandleSignal);
-    setitimer(ITIMER_REAL, &timer, NULL);
+    this->numberOfCycles = numberOfCycles;
+    inter = new boost::posix_time::seconds(1);//interval * 60);
+    timer = new boost::asio::deadline_timer(ioService, *inter);
+    timer->async_wait(tick);
+    ioService.run();
 }
 
-void VirusTotalLogic::handleSignal(int signum)
+void VirusTotalLogic::tick(const boost::system::error_code& /*e*/)
 {
-//    std::cout << "VIRUS ALLERT!!!" << std::endl;
-    initializeConnection();
-    rescan();
-    std::string html = getReport();
-    std::string results = parseResults(html);
-    saveResultsToFile(results);
-}
-
-
-void VirusTotalLogic::staticHandleSignal(int signum)
-{
-    instance->handleSignal(signum);
+    std::cout << "tick" << std::endl;
+//    instance->initializeConnection();
+//    instance->rescan();
+//    std::string html = instance->getReport();
+//    std::string results = instance->parseResults(html);
+//    instance->saveResultsToFile(results);
+    if(++(instance->iterator) != instance->numberOfCycles)
+    {
+        instance->timer->expires_at(instance->timer->expires_at() + *(instance->inter));
+        instance->timer->async_wait(boost::bind(VirusTotalLogic::tick, boost::asio::placeholders::error));
+    }
 }
