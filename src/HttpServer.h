@@ -27,9 +27,7 @@ public:
     void handleConnection(int socket_desc);
 
     bool handleMessage(const std::string& message);
-
-    void reply(int newSocket);
-
+    
     void startServer();
 
 };
