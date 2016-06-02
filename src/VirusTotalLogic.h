@@ -33,7 +33,7 @@ private:
     std::string scan_id;
     std::string permalink;
     std::string virusPath;
-    std::string fileData;
+    std::string encodedFile;
 
     int numberOfCycles;
     int iterator;
@@ -56,17 +56,21 @@ private:
 
     void saveResultsToFile(const std::string& results);
 
+    static void scanCycling(const boost::system::error_code& /*e*/);
+
+    static void rescanCycling(const boost::system::error_code& /*e*/);
+
 public:
 
     VirusTotalLogic() { iterator = 0; instance = this; }
 
     ~VirusTotalLogic();
 
+    void setEncodedFile(const std::string &encoded);
+
     void setVirusPath(const std::string& path);
 
-    void getCyclicReport(const std::string& filePath, int interval, int numberOfCycles);
-
-    static void tick(const boost::system::error_code& /*e*/);
+    void getCyclicReport(int interval, int numberOfCycles, bool toRescan);
 
     void setSHA256(const std::string& sha);
 

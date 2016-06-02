@@ -274,28 +274,38 @@ void VirusTotalLogic::getContentFromAddress(const std::string &address, std::str
     }
 }
 
-void VirusTotalLogic::getCyclicReport(const std::string& filePath, int interval, int numberOfCycles)
+void VirusTotalLogic::getCyclicReport(int interval, int numberOfCycles, bool toRescan)
 {
     this->numberOfCycles = numberOfCycles;
-    inter = new boost::posix_time::seconds(1);//interval * 60);
+    inter = new boost::posix_time::seconds(interval * 60);
     timer = new boost::asio::deadline_timer(ioService, *inter);
-    timer->async_wait(tick);
+    toRescan ? timer->async_wait(rescanCycling) : timer->async_wait(scanCycling);
     ioService.run();
 }
 
-void VirusTotalLogic::tick(const boost::system::error_code& /*e*/)
+void VirusTotalLogic::scanCycling(const boost::system::error_code& /*e*/)
 {
-    std::cout << "tick" << std::endl;
-//    instance->initializeConnection();
-//    instance->rescan();
-//    std::string html = instance->getReport();
-//    std::string results = instance->parseResults(html);
-//    instance->saveResultsToFile(results);
+    instance->scanFileEncoded(instance->encodedFile);
     if(++(instance->iterator) != instance->numberOfCycles)
     {
         instance->timer->expires_at(instance->timer->expires_at() + *(instance->inter));
-        instance->timer->async_wait(boost::bind(VirusTotalLogic::tick, boost::asio::placeholders::error));
+        instance->timer->async_wait(boost::bind(VirusTotalLogic::rescanCycling, boost::asio::placeholders::error));
     }
+}
+
+void VirusTotalLogic::rescanCycling(const boost::system::error_code& /*e*/)
+{
+    instance->rescanAndSaveReport();
+    if(++(instance->iterator) != instance->numberOfCycles)
+    {
+        instance->timer->expires_at(instance->timer->expires_at() + *(instance->inter));
+        instance->timer->async_wait(boost::bind(VirusTotalLogic::scanCycling, boost::asio::placeholders::error));
+    }
+}
+
+void VirusTotalLogic::setEncodedFile(const std::string &encoded)
+{
+    this->encodedFile = encoded;
 }
 
 void VirusTotalLogic::setSHA256(const std::string &sha)

@@ -106,13 +106,12 @@ bool HttpServer::handleMessage(const std::string &message)
 
         if(type == "rescan")
         {
-            // TODO obsluga cykliczne
             if(!json.getValue("sha256").empty())
             {
                 vtl.setSHA256(json.getValue("sha256"));
                 if(json.getValue("cycling") == "yes")
                 {
-                    // TODO wywolanie cycling z odpowiednimi argumentami
+                    vtl.getCyclicReport(atoi(json.getValue("interval").c_str()), atoi(json.getValue("numberOfCycles").c_str()), true);
                 }
                 else
                 {
@@ -126,12 +125,12 @@ bool HttpServer::handleMessage(const std::string &message)
         }
         else if(type == "send")
         {
-            // TODO obsluga cykliczna
             if(json.has("file"))
             {
+                vtl.scanFileEncoded("plik");            // TODO ustawianie encodedFile
                 if(json.getValue("cycling") == "yes")
                 {
-                    // TODO wywolanie cycling z odpowiednimi argumentami
+                    vtl.getCyclicReport(atoi(json.getValue("interval").c_str()), atoi(json.getValue("numberOfCycles").c_str()), false);
                 }
                 else
                 {

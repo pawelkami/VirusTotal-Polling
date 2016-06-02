@@ -23,7 +23,7 @@ int main(int argc, char** argv)
     if (vm.count("cycles"))
     {
         VirusTotalLogic vtl;
-        vtl.getCyclicReport(filePath, std::stoi(CONFIG.getValue("polling_interval_minutes_default")), vm.count("cycles"));
+        vtl.getCyclicReport(std::stoi(CONFIG.getValue("polling_interval_minutes_default")), vm.count("cycles"), false);
     }
     else if(vm.count("service"))
     {
