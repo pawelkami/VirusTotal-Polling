@@ -4,6 +4,7 @@
 #include "Logger.h"
 #include "HttpClient.h"
 #include "VirusTotalLogic.h"
+#include "HttpServer.h"
 
 using namespace std;
 namespace po = boost::program_options;
@@ -15,22 +16,23 @@ int main(int argc, char** argv)
 {
     po::variables_map vm = handleParameters(argc, argv);
 
-    string filePath = vm["file"].as<string>();
+    string filePath;
+    if(vm.count("file"))
+        filePath = vm["file"].as<string>();
 
     if (vm.count("cycles"))
     {
         VirusTotalLogic vtl;
         vtl.getCyclicReport(filePath, std::stoi(CONFIG.getValue("polling_interval_minutes_default")), vm.count("cycles"));
     }
+    else if(vm.count("service"))
+    {
+        HttpServer::getInstance().startServer();
+    }
     else
     {
         VirusTotalLogic vtl;
-        vtl.initializeConnection();
-        vtl.setVirusPath(filePath);
-        vtl.sendFile();
-        std::string html = vtl.getReport();
-        std::string results = vtl.parseResults(html);
-        vtl.saveResultsToFile(results);
+        vtl.scanFile(filePath);
     }
 
 	return 0;
@@ -43,7 +45,8 @@ po::variables_map handleParameters(int argc, char **argv)
             ("help,h", "Print this message")
             ("cycles,c", po::value<int>(), "Number of rescans")
             ("time,t", po::value<int>(), "Time between rescans")
-            ("file", po::value<string>(), "File to scan");
+            ("file", po::value<string>(), "File to scan")
+            ("service,s", "Start as service");
 
     po::positional_options_description positionalDescription;
     positionalDescription.add("file", 1);
@@ -70,7 +73,7 @@ po::variables_map handleParameters(int argc, char **argv)
         exit(0);
     }
 
-    if (!vm.count("file"))
+    if (!vm.count("file")&& !vm.count("service"))
     {
         cout << "No file to scan" << endl;
         exit(0);

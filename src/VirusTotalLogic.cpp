@@ -33,33 +33,7 @@ std::string VirusTotalLogic::encodeData(const std::string &filePath)
 
     std::string fileData = buffer.str();
 
-    std::string newLine = "\r\n";
-
-    std::vector<std::string> bodyParts;
-
-    // Add apikey.
-    bodyParts.push_back("--" + this->boundary);
-    bodyParts.push_back("Content-Disposition: form-data; name=\"apikey\"");
-    bodyParts.push_back("");
-    bodyParts.push_back(CONFIG.getValue("apikey"));
-
-    // Add file.
-    bodyParts.push_back("--" + this->boundary);
-    bodyParts.push_back("Content-Disposition: form-data; name=\"file\"; filename=\"" +
-                        getFilename(filePath) + "\"");
-    bodyParts.push_back("Content-Type: application/octet-stream");
-    bodyParts.push_back("");
-    bodyParts.push_back(fileData);
-    bodyParts.push_back("--" + this->boundary + "--");
-
-    std::string body = "";
-
-    // Create body.
-    for(auto it = bodyParts.begin(); it != bodyParts.end(); ++it)
-    {
-        body += it->data() + newLine;
-    }
-    return body;
+    return fileData;
 }
 
 std::string VirusTotalLogic::getContentType()
@@ -123,9 +97,9 @@ std::string VirusTotalLogic::getReport()
     return html;
 }
 
-void VirusTotalLogic::sendFile()
+void VirusTotalLogic::sendFile(const std::string& encoded)
 {
-    std::string body = encodeData(virusPath);
+    std::string body = prepareFileToSend(encoded);
     HttpRequest request;
     request.putRequest(POST, CONFIG.getValue("scan_url"));
     request.putHeader("content-type", getContentType());
@@ -237,8 +211,11 @@ void VirusTotalLogic::saveResultsToFile(const std::string &results)
                 resultsPath = "";
             }
         }
-
-    std::string filename =  resultsPath + virusPath.substr(virusPath.find_last_of('/') + 1);
+    std::string filename;
+    if(!virusPath.empty())
+        filename =  resultsPath + virusPath.substr(virusPath.find_last_of('/') + 1);
+    else
+        filename = fileHash;
 
     filename += currentDateTime() + ".txt";
 
@@ -320,3 +297,77 @@ void VirusTotalLogic::tick(const boost::system::error_code& /*e*/)
         instance->timer->async_wait(boost::bind(VirusTotalLogic::tick, boost::asio::placeholders::error));
     }
 }
+
+void VirusTotalLogic::setSHA256(const std::string &sha)
+{
+    this->fileHash = sha;
+}
+
+void VirusTotalLogic::scanFile(const std::string &filePath)
+{
+    initializeConnection();
+    setVirusPath(filePath);
+    sendFile(encodeData(filePath));
+    std::string html = getReport();
+    std::string results = parseResults(html);
+    saveResultsToFile(results);
+}
+
+void VirusTotalLogic::scanFileEncoded(const std::string &encoded)
+{
+    initializeConnection();
+    sendFile(encoded);
+    std::string html = getReport();
+    std::string results = parseResults(html);
+    saveResultsToFile(results);
+}
+
+std::string VirusTotalLogic::prepareFileToSend(const std::string &encoded)
+{
+    std::string newLine = "\r\n";
+
+    std::vector<std::string> bodyParts;
+
+    // Add apikey.
+    bodyParts.push_back("--" + this->boundary);
+    bodyParts.push_back("Content-Disposition: form-data; name=\"apikey\"");
+    bodyParts.push_back("");
+    bodyParts.push_back(CONFIG.getValue("apikey"));
+
+    // Add file.
+    bodyParts.push_back("--" + this->boundary);
+    bodyParts.push_back("Content-Disposition: form-data; name=\"file\"; filename=\"" +
+                        getFilename(this->virusPath) + "\"");
+    bodyParts.push_back("Content-Type: application/octet-stream");
+    bodyParts.push_back("");
+    bodyParts.push_back(encoded);
+    bodyParts.push_back("--" + this->boundary + "--");
+
+    std::string body = "";
+
+    // Create body.
+    for(auto it = bodyParts.begin(); it != bodyParts.end(); ++it)
+    {
+        body += it->data() + newLine;
+    }
+    return body;
+}
+
+void VirusTotalLogic::rescanAndSaveReport()
+{
+    initializeConnection();
+    rescan();
+    std::string html = getReport();
+    std::string results = parseResults(html);
+    saveResultsToFile(results);
+
+}
+
+
+
+
+
+
+
+
+

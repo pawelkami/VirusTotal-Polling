@@ -2,36 +2,34 @@
 #include "JsonObject.h"
 #include "Logger.h"
 #include "VirusTotalLogic.h"
+#include <sys/wait.h>
+#include <signal.h>
 
 HttpServer::HttpServer()
 {
-
+    signal(SIGCHLD, &sigchldHandler);
+    isSSL = false;
 }
 
-void* HttpServer::connectionHandler(void *sock)
+void HttpServer::handleConnection(int newSocket)
 {
-    int socketClient = *(int*)sock;
-    HttpServer server = HttpServer::getInstance();
-    //Send some messages to the client
-    char* message = "Greetings! I am your connection handler\n";
-    server.sendMsg(message, socketClient);
+    char clientMessage[2000];
+    memset(clientMessage, 0, 2000);
+    recv(newSocket, clientMessage, 2000, 0);
 
-    message = "Now type something and i shall repeat what you type \n";
-    HttpServer::getInstance().sendMsg(message, socketClient);
-
-    std::string clientMessage = server.receiveMsg(socketClient);
     HttpRequest request(clientMessage);
 
     std::cout << clientMessage << std::endl;
-    if(!server.handleMessage(request.getBody()))
+    if(!handleMessage(request.getBody()))
     {
         LOG_ERROR("Received bad Http Request");
         // TODO powiedziec o bledzie klientowi
+
     }
 
     // TODO odpowiedziec klientowi
 
-    return 0;
+    return;
 }
 
 void HttpServer::init()
@@ -44,7 +42,8 @@ void HttpServer::init()
     sockaddr_in server;
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons( 8888 );    // port do wyedytowania TODO
+    int port = std::stoi(CONFIG.getValue("port_server"));
+    server.sin_port = htons(port);
 
     if( bind(sock,(struct sockaddr *)&server , sizeof(server)) < 0)
     {
@@ -64,35 +63,22 @@ void HttpServer::startServer()
     int c = sizeof(struct sockaddr_in);
     int newSocket;
     sockaddr_in client;
-    while( (newSocket = accept(sock, (struct sockaddr *)&client, (socklen_t*)&c)) )
+
+    while(true)
     {
-        puts("Connection accepted");
+        if( (newSocket = accept(sock, (struct sockaddr *)&client, (socklen_t*)&c)) )
+        {
+            puts("Connection accepted");
 
-        //Reply to the client
-        reply(newSocket);
+            handleConnection(newSocket);
+
+        }
+
+        if (newSocket<0)
+        {
+            perror("accept failed");
+        }
     }
-
-    if (newSocket<0)
-    {
-        perror("accept failed");
-        return;
-    }
-}
-
-void HttpServer::reply(int newSocket)
-{
-    char *message = "Hello Client , I have received your connection. And now I will assign a handler for you\n";
-    HttpServer::getInstance().sendMsg(message, newSocket);
-
-    pthread_t sniffer_thread;
-
-    if( pthread_create( &sniffer_thread , NULL ,  HttpServer::connectionHandler , &newSocket) < 0)
-    {
-        perror("could not create thread");
-        return;
-    }
-
-    puts("Handler assigned");
 }
 
 HttpServer::~HttpServer()
@@ -113,14 +99,38 @@ bool HttpServer::handleMessage(const std::string &message)
 
     std::string type = json.getValue("type");
 
-    VirusTotalLogic vtl;
-    if(type == "rescan")
+    pid_t pid;
+    if((pid = fork()) == 0)
     {
-        // TODO obsluga zwykla i cykliczne
-    }
-    else if(type == "send")
-    {
-        // TODO obsluga zwykla i cykliczna
+        VirusTotalLogic vtl;
+
+        if(type == "rescan")
+        {
+            // TODO obsluga cykliczne
+            if(!json.getValue("sha256").empty())
+            {
+                vtl.setSHA256(json.getValue("sha256"));
+                vtl.rescanAndSaveReport();
+            }
+            else
+            {
+                LOG_ERROR("No sha256 in message");
+            }
+        }
+        else if(type == "send")
+        {
+            // TODO obsluga cykliczna
+            if(json.has("file"))
+            {
+                vtl.scanFileEncoded(json.getValue("file"));
+            }
+            else
+            {
+                LOG_ERROR("No sha256 in message");
+            }
+        }
+
+        exit(0);
     }
 
     return true;
@@ -132,6 +142,15 @@ HttpServer &HttpServer::getInstance()
     static HttpServer server;
     return server;
 }
+
+void HttpServer::sigchldHandler(int sig)
+{
+    pid_t pid;
+    pid = wait(NULL);
+    LOG_INFO("Process has ended. pid = " + std::to_string(pid));
+}
+
+
 
 
 

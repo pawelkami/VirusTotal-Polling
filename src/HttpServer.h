@@ -14,22 +14,21 @@
 class HttpServer : public HttpConnection
 {
 private:
-
-
     HttpServer();
+
+    static void sigchldHandler(int sig);
+
 public:
     static HttpServer& getInstance();
 
     ~HttpServer();
     void init();
 
-    static void *connectionHandler(void *socket_desc);
+    void handleConnection(int socket_desc);
 
     bool handleMessage(const std::string& message);
 
-
     void reply(int newSocket);
-
 
     void startServer();
 

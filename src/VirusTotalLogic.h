@@ -33,6 +33,8 @@ private:
     std::string scan_id;
     std::string permalink;
     std::string virusPath;
+    std::string fileData;
+
     int numberOfCycles;
     int iterator;
     boost::posix_time::seconds *inter;
@@ -40,17 +42,13 @@ private:
     boost::asio::io_service ioService;
     static VirusTotalLogic *instance;
 
-public:
-
-    VirusTotalLogic() { iterator = 0; instance = this; }
-
-    ~VirusTotalLogic();
+    std::string prepareFileToSend(const std::string& encoded);
 
     std::string getReport();
 
     void initializeConnection();
 
-    void sendFile();
+    void sendFile(const std::string &encoded);
 
     std::string parseResults(const std::string& html);
 
@@ -58,11 +56,25 @@ public:
 
     void saveResultsToFile(const std::string& results);
 
+public:
+
+    VirusTotalLogic() { iterator = 0; instance = this; }
+
+    ~VirusTotalLogic();
+
     void setVirusPath(const std::string& path);
 
     void getCyclicReport(const std::string& filePath, int interval, int numberOfCycles);
 
     static void tick(const boost::system::error_code& /*e*/);
+
+    void setSHA256(const std::string& sha);
+
+    void scanFile(const std::string& filepath);
+
+    void scanFileEncoded(const std::string& encoded);
+
+    void rescanAndSaveReport();
 
 };
 
