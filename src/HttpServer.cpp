@@ -110,7 +110,14 @@ bool HttpServer::handleMessage(const std::string &message)
             if(!json.getValue("sha256").empty())
             {
                 vtl.setSHA256(json.getValue("sha256"));
-                vtl.rescanAndSaveReport();
+                if(json.getValue("cycling") == "yes")
+                {
+                    // TODO wywolanie cycling z odpowiednimi argumentami
+                }
+                else
+                {
+                    vtl.rescanAndSaveReport();
+                }
             }
             else
             {
@@ -122,7 +129,14 @@ bool HttpServer::handleMessage(const std::string &message)
             // TODO obsluga cykliczna
             if(json.has("file"))
             {
-                vtl.scanFileEncoded(json.getValue("file"));
+                if(json.getValue("cycling") == "yes")
+                {
+                    // TODO wywolanie cycling z odpowiednimi argumentami
+                }
+                else
+                {
+                    vtl.scanFileEncoded(json.getValue("file"));
+                }
             }
             else
             {
