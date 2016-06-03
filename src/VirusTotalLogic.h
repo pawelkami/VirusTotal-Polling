@@ -57,8 +57,6 @@ private:
 
     void saveResultsToFile(const std::string& results);
 
-    static void scanCycling(const boost::system::error_code& /*e*/);
-
     static void rescanCycling(const boost::system::error_code& /*e*/);
 
 public:

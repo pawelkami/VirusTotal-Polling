@@ -304,21 +304,9 @@ void VirusTotalLogic::getCyclicReport(int interval, int numberOfCycles, bool toR
     this->numberOfCycles = numberOfCycles - 1;
     inter = new boost::posix_time::seconds(interval * 60);
     timer = new boost::asio::deadline_timer(ioService, *inter);
-    const boost::system::error_code e;
-    toRescan ? rescanCycling(e) : scanCycling(e);
+    toRescan ? rescanAndSaveReport() : scanFileEncoded(this->encodedFile);
     timer->async_wait(rescanCycling);
     ioService.run();
-}
-
-void VirusTotalLogic::scanCycling(const boost::system::error_code& /*e*/)
-{
-    LOG_DEBUG("");
-    instance->scanFileEncoded(instance->encodedFile);
-    if(++(instance->iterator) < instance->numberOfCycles)
-    {
-        instance->timer->expires_at(instance->timer->expires_at() + *(instance->inter));
-        instance->timer->async_wait(boost::bind(VirusTotalLogic::rescanCycling, boost::asio::placeholders::error));
-    }
 }
 
 void VirusTotalLogic::rescanCycling(const boost::system::error_code& /*e*/)
