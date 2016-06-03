@@ -71,7 +71,7 @@ std::string VirusTotalLogic::getReport()
             LOG_ERROR("Code " + response.getResponseCode() + " while trying to get report URL");
             throw RequestException(response.getResponseCode());
         }
-
+        LOG_DEBUG("Received response: " + responseBody);
         JsonObject json;
         json.init(responseBody);
         std::string responseCode = json.getValue("response_code");
@@ -122,6 +122,7 @@ void VirusTotalLogic::sendFile(const std::string& encoded)
     fileHash = json.getValue("sha256");
     scan_id = json.getValue("scan_id");
     permalink = json.getValue("permalink");
+    LOG_DEBUG(responseBody);
     LOG_INFO("Received sha256 = " + fileHash + ", scan_id = " + scan_id);
 }
 
@@ -287,6 +288,7 @@ void VirusTotalLogic::getContentFromAddress(const std::string &address, std::str
 
 void VirusTotalLogic::getCyclicReport(int interval, int numberOfCycles, bool toRescan)
 {
+    LOG_DEBUG("");
     this->numberOfCycles = numberOfCycles - 1;
     inter = new boost::posix_time::seconds(interval * 60);
     timer = new boost::asio::deadline_timer(ioService, *inter);
@@ -298,8 +300,9 @@ void VirusTotalLogic::getCyclicReport(int interval, int numberOfCycles, bool toR
 
 void VirusTotalLogic::scanCycling(const boost::system::error_code& /*e*/)
 {
+    LOG_DEBUG("");
     instance->scanFileEncoded(instance->encodedFile);
-    if(++(instance->iterator) != instance->numberOfCycles)
+    if(++(instance->iterator) < instance->numberOfCycles)
     {
         instance->timer->expires_at(instance->timer->expires_at() + *(instance->inter));
         instance->timer->async_wait(boost::bind(VirusTotalLogic::rescanCycling, boost::asio::placeholders::error));
@@ -308,11 +311,12 @@ void VirusTotalLogic::scanCycling(const boost::system::error_code& /*e*/)
 
 void VirusTotalLogic::rescanCycling(const boost::system::error_code& /*e*/)
 {
+    LOG_DEBUG("");
     instance->rescanAndSaveReport();
-    if(++(instance->iterator) != instance->numberOfCycles)
+    if(++(instance->iterator) < instance->numberOfCycles)
     {
         instance->timer->expires_at(instance->timer->expires_at() + *(instance->inter));
-        instance->timer->async_wait(boost::bind(VirusTotalLogic::scanCycling, boost::asio::placeholders::error));
+        instance->timer->async_wait(boost::bind(VirusTotalLogic::rescanCycling, boost::asio::placeholders::error));
     }
 }
 

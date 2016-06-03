@@ -23,11 +23,9 @@ void HttpServer::handleConnection(int newSocket)
     if(!handleMessage(request.getBody()))
     {
         LOG_ERROR("Received bad Http Request");
-        // TODO powiedziec o bledzie klientowi
-
+        sendMsg("HTTP/1.1 400 Bad Request\r\n\r\n", newSocket);
     }
 
-    // TODO odpowiedziec klientowi
     sendMsg("HTTP/1.1 200 OK\r\n\r\n", newSocket);
 
     return;
@@ -101,7 +99,7 @@ bool HttpServer::handleMessage(const std::string &message)
     if(!json.has("type"))
     {
         LOG_ERROR("Received JSON does not contain 'type'");
-        return false; // TODO throw
+        return false;
     }
 
     std::string type = json.getValue("type");
