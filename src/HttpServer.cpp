@@ -17,6 +17,7 @@ void HttpServer::handleConnection(int newSocket)
     HttpRequest request(clientMessage);
 
     std::cout << clientMessage << std::endl;
+    std::cout << clientMessage.size() << std::endl;
 
     std::string fileBody = "";
     if(request.getHeader("Content-Type").find("application/octet-stream") != std::string::npos)

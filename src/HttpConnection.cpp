@@ -1,6 +1,7 @@
 #include <cstring>
 #include <openssl/ssl.h>
 #include <sys/socket.h>
+#include <vector>
 #include "HttpConnection.h"
 #include "Utils.h"
 #include "Logger.h"
@@ -73,7 +74,6 @@ std::string HttpConnection::readData(int sock) {
     std::string answer;
 
     int contentLength = 0;
-
     // Reading headers
     do{
         line = readLine(sock);
@@ -178,7 +178,8 @@ std::string HttpConnection::readLine(int sock)
 std::string HttpConnection::readNotChunked(int contentLength, int sock)
 {
     int bytesLeft = contentLength;
-    std::string answer;
+//    std::string answer;
+    std::vector<char> answer;
     char answ[RCV_BUF_SIZE];
 
     memset(answ, 0, sizeof(answ));
@@ -187,10 +188,12 @@ std::string HttpConnection::readNotChunked(int contentLength, int sock)
         int bytesToRead = bytesLeft > RCV_BUF_SIZE ? RCV_BUF_SIZE : bytesLeft;
         int n = isSSL ? SSL_read(conn, answ, bytesToRead) : recv(sock, answ, bytesToRead, 0);
         bytesLeft -= n;
-        answer += answ;
+        for(int i = 0; i < n; ++i)
+            answer.push_back(answ[i]);
+
         memset(answ, 0, sizeof(answ));
     }
-    return answer;
+    return std::string(answer.begin(), answer.end());
 }
 
 std::string HttpConnection::receiveMsg(int sock)
