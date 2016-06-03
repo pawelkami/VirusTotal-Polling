@@ -276,10 +276,12 @@ void VirusTotalLogic::getContentFromAddress(const std::string &address, std::str
 
 void VirusTotalLogic::getCyclicReport(int interval, int numberOfCycles, bool toRescan)
 {
-    this->numberOfCycles = numberOfCycles;
+    this->numberOfCycles = numberOfCycles - 1;
     inter = new boost::posix_time::seconds(interval * 60);
     timer = new boost::asio::deadline_timer(ioService, *inter);
-    toRescan ? timer->async_wait(rescanCycling) : timer->async_wait(scanCycling);
+    const boost::system::error_code e;
+    toRescan ? rescanCycling(e) : scanCycling(e);
+    timer->async_wait(rescanCycling);
     ioService.run();
 }
 
