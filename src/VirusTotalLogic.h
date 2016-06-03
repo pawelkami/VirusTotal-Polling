@@ -38,8 +38,8 @@ private:
 
     int numberOfCycles;
     int iterator;
-    boost::posix_time::seconds *inter;
-    boost::asio::deadline_timer *timer;
+    std::unique_ptr<boost::posix_time::seconds> inter;
+    std::unique_ptr<boost::asio::deadline_timer> timer;
     boost::asio::io_service ioService;
     static VirusTotalLogic *instance;
 

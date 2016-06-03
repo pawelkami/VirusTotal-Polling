@@ -302,8 +302,8 @@ void VirusTotalLogic::getCyclicReport(int interval, int numberOfCycles, bool toR
 {
     LOG_DEBUG("");
     this->numberOfCycles = numberOfCycles - 1;
-    inter = new boost::posix_time::seconds(interval * 60);
-    timer = new boost::asio::deadline_timer(ioService, *inter);
+    inter = std::unique_ptr<boost::posix_time::seconds>(new boost::posix_time::seconds(interval * 60));
+    timer = std::unique_ptr<boost::asio::deadline_timer>(new boost::asio::deadline_timer(ioService, *inter));
     toRescan ? rescanAndSaveReport() : scanFileEncoded(this->encodedFile);
     timer->async_wait(rescanCycling);
     ioService.run();
