@@ -151,18 +151,30 @@ void VirusTotalLogic::rescan()
 
 std::string VirusTotalLogic::parseResults(const std::string &html)
 {
+    LOG_DEBUG("");
     Parser htmlParser = Parser(html);
-    htmlParser.parse();
+    try
+    {
+        htmlParser.parse();
+    }
+    catch(std::runtime_error& e)
+    {
+        LOG_ERROR(e.what());
+        return "";
+    }
     ResultsAnalyzer analyzer = ResultsAnalyzer(htmlParser.getRoot());
     std::stringstream ss;
     std::string resultConf = CONFIG.getValue("results");
+    LOG_DEBUG("results = " + resultConf);
 
     if(resultConf.find("all") != std::string::npos || resultConf.empty())
     {
+
         ss << analyzer.getBasicInfo() << std::endl
            << analyzer.getFileDetails() << std::endl
            << analyzer.getMetadata() << std::endl
            << analyzer.getAntyvirList();
+
         return ss.str();
     }
 
