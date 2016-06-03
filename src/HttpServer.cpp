@@ -43,6 +43,13 @@ void HttpServer::init()
     sockaddr_in server;
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
+
+    if(!CONFIG.has("port_server"))
+    {
+        LOG_ERROR("No 'port_server' key in configuration file");
+        throw std::runtime_error("No 'port_server' key in configuration file");
+    }
+
     int port = std::stoi(CONFIG.getValue("port_server"));
     server.sin_port = htons(port);
 

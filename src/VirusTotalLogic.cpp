@@ -49,7 +49,6 @@ std::string VirusTotalLogic::getFilename(const std::string& filePath)
 
 VirusTotalLogic::~VirusTotalLogic()
 {
-    delete(timer);
 }
 
 
@@ -159,7 +158,10 @@ std::string VirusTotalLogic::parseResults(const std::string &html)
 
     if(resultConf.find("all") != std::string::npos || resultConf.empty())
     {
-        ss << analyzer.getBasicInfo() << std::endl << analyzer.getAntyvirList();
+        ss << analyzer.getBasicInfo() << std::endl
+           << analyzer.getFileDetails() << std::endl
+           << analyzer.getMetadata() << std::endl
+           << analyzer.getAntyvirList();
         return ss.str();
     }
 
@@ -183,11 +185,20 @@ std::string VirusTotalLogic::parseResults(const std::string &html)
         ss << analyzer.getAnalysisDate() << std::endl;
     }
 
+    if(resultConf.find("file_details") != std::string::npos)
+    {
+        ss << analyzer.getFileDetails() << std::endl;
+    }
+
+    if(resultConf.find("metadata") != std::string::npos)
+    {
+        ss << analyzer.getMetadata() << std::endl;
+    }
+
     if(resultConf.find("nolist") == std::string::npos)
     {
         ss << analyzer.getAntyvirList();
     }
-
 
     return ss.str();
 }
