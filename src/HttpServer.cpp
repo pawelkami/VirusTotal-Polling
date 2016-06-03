@@ -13,10 +13,7 @@ HttpServer::HttpServer()
 
 void HttpServer::handleConnection(int newSocket)
 {
-    char clientMessage[2000];
-    memset(clientMessage, 0, 2000);
-    recv(newSocket, clientMessage, 2000, 0);
-
+    std::string clientMessage = receiveMsg(newSocket);
     HttpRequest request(clientMessage);
 
     std::cout << clientMessage << std::endl;

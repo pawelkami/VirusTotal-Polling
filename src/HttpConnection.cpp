@@ -85,11 +85,10 @@ std::string HttpConnection::readData(int sock) {
             contentLength = stoi((line.substr(line.find_first_of(":") + 1, std::string::npos)));
         }
 
-        if(line == "\r\n")
+        if(line == "\r\n" || line == "")
         {
             break;
         }
-
 
     } while(true);
 
@@ -153,7 +152,7 @@ std::string HttpConnection::readLine(int sock)
     std::string line;
     char c = '\0';
 
-    while ( (isSSL ? n = SSL_read(conn, &c, 1) :  n = (int)recv( sock, &c, 1, 1 ) ) > 0 )
+    while ( (isSSL ? n = SSL_read(conn, &c, 1) :  n = (int)recv( sock, &c, 1, 0 ) ) > 0 )
     {
         if ( c == '\r' )
         {
@@ -166,7 +165,7 @@ std::string HttpConnection::readLine(int sock)
             if ( ( n > 0 ) && ( c == '\n' ) )
             {
                 if(!isSSL)
-                    n = (int)recv( sock, &c, 1, 1 );
+                    n = (int)recv( sock, &c, 1, 0 );
                 line += c;
                 break; // end of line
             }
