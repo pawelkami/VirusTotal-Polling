@@ -6,7 +6,7 @@ server_addr="http://localhost:24563"
 
 def sendRequest(data):
     req = urllib2.Request(server_addr)
-    req.addr_header("Content-Type", "application/json")
+    req.add_header("Content-Type", "application/json")
 
     response = urllib2.urlopen(req, json.dumps(data))
 
@@ -37,6 +37,7 @@ if __name__ == "__main__":
         cycling = "yes"
         data['interval'] = results.interval
         data['numberOfCycles'] = results.number_of_cycles
+    data['cycling'] = cycling
 
     if results.server_url != None:
         server_addr = results.server_url

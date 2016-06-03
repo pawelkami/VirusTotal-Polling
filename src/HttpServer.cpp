@@ -28,6 +28,7 @@ void HttpServer::handleConnection(int newSocket)
     }
 
     // TODO odpowiedziec klientowi
+    sendMsg("HTTP/1.1 200 OK\r\n\r\n", newSocket);
 
     return;
 }
@@ -89,7 +90,6 @@ HttpServer::~HttpServer()
 bool HttpServer::handleMessage(const std::string &message)
 {
     JsonObject json;
-
     json.init(message);
     if(!json.has("type"))
     {
@@ -127,7 +127,7 @@ bool HttpServer::handleMessage(const std::string &message)
         {
             if(json.has("file"))
             {
-                vtl.scanFileEncoded("plik");            // TODO ustawianie encodedFile
+                vtl.setVirusPath(json.getValue("filename"));
                 if(json.getValue("cycling") == "yes")
                 {
                     vtl.getCyclicReport(atoi(json.getValue("interval").c_str()), atoi(json.getValue("numberOfCycles").c_str()), false);
