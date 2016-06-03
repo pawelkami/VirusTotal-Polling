@@ -1,15 +1,40 @@
 import json
 import urllib2
 import argparse
+import httplib
 
-server_addr="http://localhost:24563"
+server_addr="localhost:24563"
 
 def sendRequest(data):
-    req = urllib2.Request(server_addr)
-    req.add_header("Content-Type", "application/json")
+    #req = urllib2.Request(server_addr)
+    #req.add_header("Content-Type", "application/json")
 
-    response = urllib2.urlopen(req, json.dumps(data))
+    #response = urllib2.urlopen(req, json.dumps(data))
+    #print response
+    conn = httplib.HTTPConnection(server_addr)
+    conn.putrequest("POST", "/")
+    conn.putheader("Content-Type", "application/json")
+    conn.putheader("Content-Length", str(len(data)))
+    conn.endheaders()
+    conn.send(json.dumps(data))
+    errcode, errmsg, headers = conn.getreply()
 
+    print conn.file.read()
+
+def sendFile(file_data, data):
+    headers = {"Content-Type" : "application/octet-stream", "Content-Length" : str(len(file_data)) }
+    # pierwszy request
+    conn = httplib.HTTPConnection(server_addr)
+    conn.request("POST", "/", file_data, headers)
+    r1 = conn.getresponse()
+    
+    # drugi request
+    headers = { "Content-Type": "application/json", "Content-Length": str(len(data))}
+    conn.request("POST", "/", json.dumps(data), headers)
+    r2 = conn.getresponse()
+
+    
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
@@ -22,10 +47,11 @@ if __name__ == "__main__":
     results = parser.parse_args()
     type = "rescan"
     data = {}
+    file_data = None
     if results.file_path != None:
         type = "send"
         data['filename'] = results.file_path[results.file_path.rfind('/')+1:]
-        data['file'] = open(results.file_path, 'rb').read()
+        file_data = open(results.file_path, 'rb').read()
     elif results.sha256 != None:
         type = "rescan"
         data['sha256'] = results.sha256
@@ -42,4 +68,7 @@ if __name__ == "__main__":
     if results.server_url != None:
         server_addr = results.server_url
 
-    sendRequest(data)
+
+    if file_data != None:
+        sendFile(file_data, data)
+    #sendRequest(data)

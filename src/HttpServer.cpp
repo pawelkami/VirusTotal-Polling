@@ -17,7 +17,19 @@ void HttpServer::handleConnection(int newSocket)
     HttpRequest request(clientMessage);
 
     std::cout << clientMessage << std::endl;
-    if(!handleMessage(request.getBody()))
+
+    std::string fileBody = "";
+    if(request.getHeader("Content-Type").find("application/octet-stream") != std::string::npos)
+    {
+        LOG_DEBUG("Content-Type == application/octet-stream");
+        sendMsg("HTTP/1.1 201 Created\r\n\r\n", newSocket);
+        fileBody = request.getBody();
+        clientMessage = receiveMsg(newSocket);
+        request = HttpRequest(clientMessage);
+        sendMsg("HTTP/1.1 200 OK\r\n\r\n", newSocket);
+    }
+
+    if(!handleMessage(request.getBody(), fileBody))
     {
         LOG_ERROR("Received bad Http Request");
         sendMsg("HTTP/1.1 400 Bad Request\r\n\r\n", newSocket);
@@ -51,9 +63,11 @@ void HttpServer::init()
     if( bind(sock,(struct sockaddr *)&server , sizeof(server)) < 0)
     {
         puts("bind failed");
+        LOG_ERROR("bind to port = " + std::to_string(port) + " failed");
         return;
     }
     puts("bind done");
+    LOG_INFO("bind done");
 }
 
 void HttpServer::startServer()
@@ -72,14 +86,15 @@ void HttpServer::startServer()
         if( (newSocket = accept(sock, (struct sockaddr *)&client, (socklen_t*)&c)) )
         {
             puts("Connection accepted");
+            LOG_INFO("Connection accepted");
 
             handleConnection(newSocket);
-
         }
 
         if (newSocket<0)
         {
             perror("accept failed");
+            LOG_INFO("accept failed");
         }
     }
 }
@@ -89,7 +104,7 @@ HttpServer::~HttpServer()
     close(sock);
 }
 
-bool HttpServer::handleMessage(const std::string &message)
+bool HttpServer::handleMessage(const std::string &message, const std::string& fileBody)
 {
     JsonObject json;
     json.init(message);
@@ -101,6 +116,7 @@ bool HttpServer::handleMessage(const std::string &message)
 
     std::string type = json.getValue("type");
 
+    // nowy proces do obslugi polaczenia
     pid_t pid;
     if((pid = fork()) == 0)
     {
@@ -127,27 +143,28 @@ bool HttpServer::handleMessage(const std::string &message)
         }
         else if(type == "send")
         {
-            if(json.has("file"))
+            if(fileBody.empty())
             {
                 vtl.setVirusPath(json.getValue("filename"));
+                vtl.setEncodedFile(fileBody);
                 if(json.getValue("cycling") == "yes")
                 {
                     vtl.getCyclicReport(atoi(json.getValue("interval").c_str()), atoi(json.getValue("numberOfCycles").c_str()), false);
                 }
                 else
                 {
-                    vtl.scanFileEncoded(json.getValue("file"));
+                    vtl.scanFileEncoded(fileBody);
                 }
             }
             else
             {
-                LOG_ERROR("No sha256 in message");
+                LOG_ERROR("No body of file in message");
             }
         }
 
         exit(0);
     }
-
+    LOG_INFO("New process, pid = " + std::to_string(pid));
     return true;
 
 }

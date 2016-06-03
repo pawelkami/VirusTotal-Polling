@@ -100,6 +100,13 @@ const std::string &HttpRequest::getBody()
     return body;
 }
 
+const std::string HttpRequest::getHeader(const std::string &key)
+{
+    return headers[key];
+}
+
+
+
 
 
 
