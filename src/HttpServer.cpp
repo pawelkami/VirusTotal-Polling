@@ -4,6 +4,7 @@
 #include "VirusTotalLogic.h"
 #include <sys/wait.h>
 #include <signal.h>
+#include "Base64Coder.h"
 
 HttpServer::HttpServer()
 {
@@ -16,22 +17,7 @@ void HttpServer::handleConnection(int newSocket)
     std::string clientMessage = receiveMsg(newSocket);
     HttpRequest request(clientMessage);
 
-    std::cout << clientMessage << std::endl;
-    std::cout << clientMessage.size() << std::endl;
-
-    std::string fileBody = "";
-    if(request.getHeader("Content-Type").find("application/octet-stream") != std::string::npos)
-    {
-        LOG_DEBUG("Content-Type == application/octet-stream");
-        sendMsg("HTTP/1.1 201 Created\r\n\r\n", newSocket);
-        fileBody = request.getBody();
-        std::cout << fileBody.size() << std::endl;
-        clientMessage = receiveMsg(newSocket);
-        request = HttpRequest(clientMessage);
-        sendMsg("HTTP/1.1 200 OK\r\n\r\n", newSocket);
-    }
-
-    if(!handleMessage(request.getBody(), fileBody))
+    if(!handleMessage(request.getBody()))
     {
         LOG_ERROR("Received bad Http Request");
         sendMsg("HTTP/1.1 400 Bad Request\r\n\r\n", newSocket);
@@ -106,7 +92,7 @@ HttpServer::~HttpServer()
     close(sock);
 }
 
-bool HttpServer::handleMessage(const std::string &message, const std::string& fileBody)
+bool HttpServer::handleMessage(const std::string &message)
 {
     JsonObject json;
     json.init(message);
@@ -145,17 +131,18 @@ bool HttpServer::handleMessage(const std::string &message, const std::string& fi
         }
         else if(type == "send")
         {
-            if(fileBody.empty())
+            if(json.has("file"))
             {
                 vtl.setVirusPath(json.getValue("filename"));
-                vtl.setEncodedFile(fileBody);
+                Base64Coder b64;
+                vtl.setEncodedFile(b64.base64_decode(json.getValue("file")));
                 if(json.getValue("cycling") == "yes")
                 {
                     vtl.getCyclicReport(atoi(json.getValue("interval").c_str()), atoi(json.getValue("numberOfCycles").c_str()), false);
                 }
                 else
                 {
-                    vtl.scanFileEncoded(fileBody);
+                    vtl.scanFileEncoded(b64.base64_decode(json.getValue("file")));
                 }
             }
             else

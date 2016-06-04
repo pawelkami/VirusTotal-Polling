@@ -26,7 +26,7 @@ public:
 
     void handleConnection(int socket_desc);
 
-    bool handleMessage(const std::string& message, const std::string& fileBody);
+    bool handleMessage(const std::string& message);
 
     void startServer();
 
