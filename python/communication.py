@@ -2,6 +2,7 @@ import json
 import urllib2
 import argparse
 import httplib
+import base64
 
 server_addr="localhost:24563"
 
@@ -20,19 +21,6 @@ def sendRequest(data):
     errcode, errmsg, headers = conn.getreply()
 
     print conn.file.read()
-
-def sendFile(file_data, data):
-    headers = {"Content-Type" : "application/octet-stream", "Content-Length" : str(len(file_data)) }
-    # pierwszy request
-    conn = httplib.HTTPConnection(server_addr)
-    conn.request("POST", "/", file_data, headers)
-    r1 = conn.getresponse()
-    
-    # drugi request
-    headers = { "Content-Type": "application/json", "Content-Length": str(len(data))}
-    conn.request("POST", "/", json.dumps(data), headers)
-    r2 = conn.getresponse()
-
     
     
 if __name__ == "__main__":
@@ -65,10 +53,9 @@ if __name__ == "__main__":
         data['numberOfCycles'] = results.number_of_cycles
     data['cycling'] = cycling
 
+    data['file_body'] = base64.b64encode(file_data)
+
     if results.server_url != None:
         server_addr = results.server_url
 
-
-    if file_data != None:
-        sendFile(file_data, data)
-    #sendRequest(data)
+    sendRequest(data)
