@@ -1,5 +1,6 @@
 
 #include <sstream>
+#include <vector>
 #include "HttpRequest.h"
 
 void HttpRequest::putRequest(HttpMethod method, const std::string &selector)
@@ -72,6 +73,7 @@ HttpRequest::HttpRequest(const std::string &req)
 void HttpRequest::buildRequest(const std::string &req)
 {
     std::stringstream ss;
+
     ss << req;
 
     std::string temp;
@@ -86,10 +88,17 @@ void HttpRequest::buildRequest(const std::string &req)
         putHeader(key, value);
     }
 
-    std::string body;
-    while(std::getline(ss, temp))
+    if(headers.find("Content-Length") != headers.end())
     {
-        body += temp;
+        int len = std::stoi(headers["Content-Length"]);
+        body = req.substr(req.size()-len);
+    }
+    else
+    {
+        while(std::getline(ss, temp))
+        {
+            body += temp;
+        }
     }
 
     putBody(body);

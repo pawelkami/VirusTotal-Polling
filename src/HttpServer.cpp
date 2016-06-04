@@ -25,6 +25,7 @@ void HttpServer::handleConnection(int newSocket)
         LOG_DEBUG("Content-Type == application/octet-stream");
         sendMsg("HTTP/1.1 201 Created\r\n\r\n", newSocket);
         fileBody = request.getBody();
+        std::cout << fileBody.size() << std::endl;
         clientMessage = receiveMsg(newSocket);
         request = HttpRequest(clientMessage);
         sendMsg("HTTP/1.1 200 OK\r\n\r\n", newSocket);
