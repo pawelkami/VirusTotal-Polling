@@ -4,7 +4,7 @@
 #include "VirusTotalLogic.h"
 #include <sys/wait.h>
 #include <signal.h>
-#include "Base64Coder.h"
+#include "Utils.h"
 
 HttpServer::HttpServer()
 {
@@ -52,7 +52,7 @@ void HttpServer::init()
     {
         puts("bind failed");
         LOG_ERROR("bind to port = " + std::to_string(port) + " failed");
-        return;
+        throw std::runtime_error("bind failed");
     }
     puts("bind done");
     LOG_INFO("bind done");
@@ -134,15 +134,14 @@ bool HttpServer::handleMessage(const std::string &message)
             if(json.has("file"))
             {
                 vtl.setVirusPath(json.getValue("filename"));
-                Base64Coder b64;
-                vtl.setEncodedFile(b64.base64_decode(json.getValue("file")));
+                vtl.setEncodedFile(base64_decode(json.getValue("file")));
                 if(json.getValue("cycling") == "yes")
                 {
                     vtl.getCyclicReport(atoi(json.getValue("interval").c_str()), atoi(json.getValue("numberOfCycles").c_str()), false);
                 }
                 else
                 {
-                    vtl.scanFileEncoded(b64.base64_decode(json.getValue("file")));
+                    vtl.scanFileEncoded(base64_decode(json.getValue("file")));
                 }
             }
             else

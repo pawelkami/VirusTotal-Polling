@@ -375,8 +375,16 @@ std::string VirusTotalLogic::prepareFileToSend(const std::string &encoded)
     // Create body.
     for(auto it = bodyParts.begin(); it != bodyParts.end(); ++it)
     {
-        body += it->data() + newLine;
+        //body += it->data() + newLine;
+//        body.append(it->data());
+//        body.append(newLine);
+        for(auto& b : *it)
+        {
+            body.push_back(b);
+        }
+        body.append(newLine);
     }
+
     return body;
 }
 

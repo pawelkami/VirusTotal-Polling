@@ -1,26 +1,16 @@
 import json
 import urllib2
 import argparse
-import httplib
 import base64
 
-server_addr="localhost:24563"
+server_addr="http://localhost:24563"
 
 def sendRequest(data):
-    #req = urllib2.Request(server_addr)
-    #req.add_header("Content-Type", "application/json")
+    req = urllib2.Request(server_addr)
+    req.add_header("Content-Type", "application/json")
 
-    #response = urllib2.urlopen(req, json.dumps(data))
-    #print response
-    conn = httplib.HTTPConnection(server_addr)
-    conn.putrequest("POST", "/")
-    conn.putheader("Content-Type", "application/json")
-    conn.putheader("Content-Length", str(len(data)))
-    conn.endheaders()
-    conn.send(json.dumps(data))
-    errcode, errmsg, headers = conn.getreply()
-
-    print conn.file.read()
+    response = urllib2.urlopen(req, json.dumps(data))
+    print response
     
     
 if __name__ == "__main__":
@@ -40,6 +30,7 @@ if __name__ == "__main__":
         type = "send"
         data['filename'] = results.file_path[results.file_path.rfind('/')+1:]
         file_data = open(results.file_path, 'rb').read()
+        data['file'] = base64.b64encode(file_data)
     elif results.sha256 != None:
         type = "rescan"
         data['sha256'] = results.sha256
@@ -53,7 +44,6 @@ if __name__ == "__main__":
         data['numberOfCycles'] = results.number_of_cycles
     data['cycling'] = cycling
 
-    data['file_body'] = base64.b64encode(file_data)
 
     if results.server_url != None:
         server_addr = results.server_url
