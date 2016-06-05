@@ -394,6 +394,14 @@ void VirusTotalLogic::rescanAndSaveReport()
 
 }
 
+VirusTotalLogic::VirusTotalLogic()
+{
+    iterator = 0;
+    instance = this;
+}
+
+
+
 
 
 
