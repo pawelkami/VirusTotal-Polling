@@ -32,7 +32,7 @@ int main(int argc, char** argv)
     else
     {
         VirusTotalLogic vtl;
-        vtl.scanFile(filePath);
+        vtl.scanFileLocal(filePath);
     }
 
 	return 0;

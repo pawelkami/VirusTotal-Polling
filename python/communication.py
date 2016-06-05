@@ -10,8 +10,6 @@ def sendRequest(data):
     req.add_header("Content-Type", "application/json")
 
     response = urllib2.urlopen(req, json.dumps(data))
-    print response
-    
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

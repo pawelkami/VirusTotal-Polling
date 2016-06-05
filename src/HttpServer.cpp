@@ -76,7 +76,16 @@ void HttpServer::startServer()
             puts("Connection accepted");
             LOG_INFO("Connection accepted");
 
-            handleConnection(newSocket);
+            pid_t pid;
+            if((pid = fork()) == 0)
+            {
+                handleConnection(newSocket);
+                exit(0);
+            }
+            else
+            {
+                LOG_INFO("New process pid = " + std::to_string(pid));
+            }
         }
 
         if (newSocket<0)
@@ -104,55 +113,48 @@ bool HttpServer::handleMessage(const std::string &message)
 
     std::string type = json.getValue("type");
 
-    // nowy proces do obslugi polaczenia
-    pid_t pid;
-    if((pid = fork()) == 0)
+    VirusTotalLogic vtl;
+
+    if(type == "rescan")
     {
-        VirusTotalLogic vtl;
-
-        if(type == "rescan")
+        if(!json.getValue("sha256").empty())
         {
-            if(!json.getValue("sha256").empty())
+            vtl.setSHA256(json.getValue("sha256"));
+            if(json.getValue("cycling") == "yes")
             {
-                vtl.setSHA256(json.getValue("sha256"));
-                if(json.getValue("cycling") == "yes")
-                {
-                    vtl.getCyclicReport(atoi(json.getValue("interval").c_str()), atoi(json.getValue("numberOfCycles").c_str()), true);
-                }
-                else
-                {
-                    vtl.rescanAndSaveReport();
-                }
+                vtl.getCyclicReport(atoi(json.getValue("interval").c_str()), atoi(json.getValue("numberOfCycles").c_str()), true);
             }
             else
             {
-                LOG_ERROR("No sha256 in message");
+                vtl.rescanAndSaveReport();
             }
         }
-        else if(type == "send")
+        else
         {
-            if(json.has("file"))
-            {
-                vtl.setVirusPath(json.getValue("filename"));
-                vtl.setEncodedFile(base64_decode(json.getValue("file")));
-                if(json.getValue("cycling") == "yes")
-                {
-                    vtl.getCyclicReport(atoi(json.getValue("interval").c_str()), atoi(json.getValue("numberOfCycles").c_str()), false);
-                }
-                else
-                {
-                    vtl.scanFileEncoded(base64_decode(json.getValue("file")));
-                }
-            }
-            else
-            {
-                LOG_ERROR("No body of file in message");
-            }
+            LOG_ERROR("No sha256 in message");
         }
-
-        exit(0);
     }
-    LOG_INFO("New process, pid = " + std::to_string(pid));
+    else if(type == "send")
+    {
+        if(json.has("file"))
+        {
+            vtl.setVirusPath(json.getValue("filename"));
+            vtl.setDecodedFile(base64_decode(json.getValue("file")));
+            if(json.getValue("cycling") == "yes")
+            {
+                vtl.getCyclicReport(atoi(json.getValue("interval").c_str()), atoi(json.getValue("numberOfCycles").c_str()), false);
+            }
+            else
+            {
+                vtl.scanFileDecoded(base64_decode(json.getValue("file")));
+            }
+        }
+        else
+        {
+            LOG_ERROR("No body of file in message");
+        }
+    }
+
     return true;
 
 }

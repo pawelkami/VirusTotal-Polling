@@ -96,9 +96,9 @@ std::string VirusTotalLogic::getReport()
     return html;
 }
 
-void VirusTotalLogic::sendFile(const std::string& encoded)
+void VirusTotalLogic::sendFile(const std::string& decoded)
 {
-    std::string body = prepareFileToSend(encoded);
+    std::string body = prepareFileToSend(decoded);
     HttpRequest request;
     request.putRequest(POST, CONFIG.getValue("scan_url"));
     request.putHeader("content-type", getContentType());
@@ -225,7 +225,6 @@ void VirusTotalLogic::saveResultsToFile(const std::string &results)
     }
     struct stat sb;
 
-
     if(!resultsPath.empty())
         if (!(stat(resultsPath.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode)))
         {
@@ -255,7 +254,7 @@ void VirusTotalLogic::saveResultsToFile(const std::string &results)
     fout << results;
 
     fout.close();
-    LOG_INFO("Saved results");
+    LOG_INFO("Saved results " + filename);
 }
 
 void VirusTotalLogic::setVirusPath(const std::string &path)
@@ -304,7 +303,7 @@ void VirusTotalLogic::getCyclicReport(int interval, int numberOfCycles, bool toR
     this->numberOfCycles = numberOfCycles - 1;
     inter = std::unique_ptr<boost::posix_time::seconds>(new boost::posix_time::seconds(interval * 60));
     timer = std::unique_ptr<boost::asio::deadline_timer>(new boost::asio::deadline_timer(ioService, *inter));
-    toRescan ? rescanAndSaveReport() : scanFileEncoded(this->encodedFile);
+    toRescan ? rescanAndSaveReport() : scanFileDecoded(this->decodedFile);
     timer->async_wait(rescanCycling);
     ioService.run();
 }
@@ -320,9 +319,9 @@ void VirusTotalLogic::rescanCycling(const boost::system::error_code& /*e*/)
     }
 }
 
-void VirusTotalLogic::setEncodedFile(const std::string &encoded)
+void VirusTotalLogic::setDecodedFile(const std::string &decoded)
 {
-    this->encodedFile = encoded;
+    this->decodedFile = decoded;
 }
 
 void VirusTotalLogic::setSHA256(const std::string &sha)
@@ -330,7 +329,7 @@ void VirusTotalLogic::setSHA256(const std::string &sha)
     this->fileHash = sha;
 }
 
-void VirusTotalLogic::scanFile(const std::string &filePath)
+void VirusTotalLogic::scanFileLocal(const std::string &filePath)
 {
     initializeConnection();
     setVirusPath(filePath);
@@ -340,10 +339,10 @@ void VirusTotalLogic::scanFile(const std::string &filePath)
     saveResultsToFile(results);
 }
 
-void VirusTotalLogic::scanFileEncoded(const std::string &encoded)
+void VirusTotalLogic::scanFileDecoded(const std::string &decoded)
 {
     initializeConnection();
-    sendFile(encoded);
+    sendFile(decoded);
     std::string html = getReport();
     std::string results = parseResults(html);
     saveResultsToFile(results);
@@ -375,9 +374,6 @@ std::string VirusTotalLogic::prepareFileToSend(const std::string &encoded)
     // Create body.
     for(auto it = bodyParts.begin(); it != bodyParts.end(); ++it)
     {
-        //body += it->data() + newLine;
-//        body.append(it->data());
-//        body.append(newLine);
         for(auto& b : *it)
         {
             body.push_back(b);

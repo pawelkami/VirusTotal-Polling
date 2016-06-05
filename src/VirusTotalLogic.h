@@ -34,7 +34,7 @@ private:
     std::string scan_id;
     std::string permalink;
     std::string virusPath;
-    std::string encodedFile;
+    std::string decodedFile;
 
     int numberOfCycles;
     int iterator;
@@ -49,7 +49,7 @@ private:
 
     void initializeConnection();
 
-    void sendFile(const std::string &encoded);
+    void sendFile(const std::string &decoded);
 
     std::string parseResults(const std::string& html);
 
@@ -65,7 +65,7 @@ public:
 
     ~VirusTotalLogic();
 
-    void setEncodedFile(const std::string &encoded);
+    void setDecodedFile(const std::string &decoded);
 
     void setVirusPath(const std::string& path);
 
@@ -73,9 +73,9 @@ public:
 
     void setSHA256(const std::string& sha);
 
-    void scanFile(const std::string& filepath);
+    void scanFileLocal(const std::string& filepath);
 
-    void scanFileEncoded(const std::string& encoded);
+    void scanFileDecoded(const std::string& decoded);
 
     void rescanAndSaveReport();
 
