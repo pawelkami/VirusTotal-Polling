@@ -170,18 +170,16 @@ std::string VirusTotalLogic::parseResults(const std::string &html)
     if(resultConf.find("all") != std::string::npos || resultConf.empty())
     {
 
-        ss << analyzer.getBasicInfo() << std::endl
-           << analyzer.getFileDetails() << std::endl
-           << analyzer.getMetadata() << std::endl
+        ss << analyzer.getSHA()
+           << analyzer.getBasicInfo() << "," << std::endl
+           << analyzer.getFileDetails() << "," << std::endl
+           << analyzer.getMetadata() << "," << std::endl
            << analyzer.getAntyvirList();
 
-        return ss.str();
+        return analyzer.makeJson(ss.str());
     }
 
-    if(resultConf.find("sha") != std::string::npos)
-    {
-        ss << analyzer.getSHA() << std::endl;
-    }
+    ss << analyzer.getSHA() << std::endl;
 
     if(resultConf.find("filename") != std::string::npos)
     {
@@ -200,12 +198,12 @@ std::string VirusTotalLogic::parseResults(const std::string &html)
 
     if(resultConf.find("file_details") != std::string::npos)
     {
-        ss << analyzer.getFileDetails() << std::endl;
+        ss << analyzer.getFileDetails() << "," << std::endl;
     }
 
     if(resultConf.find("metadata") != std::string::npos)
     {
-        ss << analyzer.getMetadata() << std::endl;
+        ss << analyzer.getMetadata() << "," << std::endl;
     }
 
     if(resultConf.find("nolist") == std::string::npos)
@@ -213,7 +211,7 @@ std::string VirusTotalLogic::parseResults(const std::string &html)
         ss << analyzer.getAntyvirList();
     }
 
-    return ss.str();
+    return analyzer.makeJson(ss.str());
 }
 
 void VirusTotalLogic::saveResultsToFile(const std::string &results)
@@ -238,7 +236,7 @@ void VirusTotalLogic::saveResultsToFile(const std::string &results)
     if(!virusPath.empty())
         filename =  resultsPath + virusPath.substr(virusPath.find_last_of('/') + 1);
     else
-        filename = fileHash;
+        filename = resultsPath + fileHash;
 
     filename += currentDateTime() + ".txt";
 
@@ -399,13 +397,6 @@ VirusTotalLogic::VirusTotalLogic()
     iterator = 0;
     instance = this;
 }
-
-
-
-
-
-
-
 
 
 
