@@ -1,6 +1,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fstream>
+#include <dirent.h>
 #include <vector>
 #include "VirusTotalLogic.h"
 #include "src/exception/RequestException.h"
@@ -238,8 +239,7 @@ void VirusTotalLogic::saveResultsToFile(const std::string &results)
                 resultsPath = "";
             }
         }
-    std::string filename;
-    filename = resultsPath + fileHash;
+    std::string filename = resultsPath + fileHash;
 
     filename += '_' + currentDateTime() + ".txt";
 
@@ -307,6 +307,49 @@ void VirusTotalLogic::getCyclicReport(int interval, int numberOfCycles, bool toR
     toRescan ? rescanAndSaveReport() : scanFileDecoded(this->decodedFile);
     timer->async_wait(rescanCycling);
     ioService.run();
+}
+
+std::string VirusTotalLogic::getResult(std::string fileHash)
+{
+    std::string latestDate = "";
+
+    // Search for the latest file starting with filenameBase
+    DIR *directory;
+    struct dirent *file;
+
+    directory = opendir(CONFIG.getValue("results_path").c_str());
+    if (directory != NULL){
+        while (file = readdir(directory)){
+            std::string currentFilename = file->d_name;
+
+            // underscore divides hash and date in result's filename
+            size_t underscorePosition = currentFilename.find_first_of("_");
+
+            if (underscorePosition != std::string::npos)
+            {
+                std::string currentHash = currentFilename.substr(0, underscorePosition);
+
+                if (currentHash == fileHash && currentFilename.length() > underscorePosition)
+                {
+                    std::string currentDate = currentFilename.substr(underscorePosition + 1, std::string::npos);
+
+                    if (latestDate.empty() || latestDate.compare(currentDate) < 0)
+                    {
+                        latestDate = currentDate;
+                    }
+                }
+            }
+        }
+    }
+
+    if (!latestDate.empty())
+    {
+        // Read and return results
+        std::ifstream stream(CONFIG.getValue("results_path") + (CONFIG.getValue("results_path").back() != '/' ? "/" : "") + fileHash + "_" + latestDate);
+        return std::string((std::istreambuf_iterator<char>(stream)),
+                        std::istreambuf_iterator<char>());
+    }
+    return "";
 }
 
 void VirusTotalLogic::rescanCycling(const boost::system::error_code& /*e*/)

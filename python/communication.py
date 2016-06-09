@@ -85,4 +85,4 @@ if __name__ == "__main__":
     response = sendRequest(data)
 
     if args.get_results:
-        print(response)
+        print(response.read())

@@ -17,14 +17,27 @@ void HttpServer::handleConnection(int newSocket)
     std::string clientMessage = receiveMsg(newSocket);
     HttpRequest request(clientMessage);
 
-    if(!handleMessage(request.getBody()))
+    std::string responseBody;
+    if(!handleMessage(request.getBody(), responseBody))
     {
         LOG_ERROR("Received bad Http Request");
         sendMsg("HTTP/1.1 400 Bad Request\r\n\r\n", newSocket);
     }
 
-    sendMsg("HTTP/1.1 200 OK\r\n\r\n", newSocket);
-
+    size_t bodyLength = responseBody.length();
+    if(bodyLength)
+    {
+        sendMsg("HTTP/1.1 200 OK\r\n"
+                "Content-Length: " + std::to_string(bodyLength) +
+                "\r\n\r\n" +
+                responseBody +
+                "\r\n",
+                newSocket);
+    }
+    else
+    {
+        sendMsg("HTTP/1.1 200 OK\r\n\r\n", newSocket);
+    }
     return;
 }
 
@@ -101,7 +114,7 @@ HttpServer::~HttpServer()
     close(sock);
 }
 
-bool HttpServer::handleMessage(const std::string &message)
+bool HttpServer::handleMessage(const std::string &message, std::string &responseBody)
 {
     JsonObject json;
     json.init(message);
@@ -154,7 +167,10 @@ bool HttpServer::handleMessage(const std::string &message)
             LOG_ERROR("No body of file in message");
         }
     }
-
+    else if(type == "get_results")
+    {
+        responseBody = vtl.getResult(json.getValue("sha256"));
+    }
     return true;
 
 }
