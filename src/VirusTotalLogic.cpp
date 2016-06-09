@@ -239,12 +239,9 @@ void VirusTotalLogic::saveResultsToFile(const std::string &results)
             }
         }
     std::string filename;
-    if(!virusPath.empty())
-        filename =  resultsPath + virusPath.substr(virusPath.find_last_of('/') + 1);
-    else
-        filename = resultsPath + fileHash;
+    filename = resultsPath + fileHash;
 
-    filename += currentDateTime() + ".txt";
+    filename += '_' + currentDateTime() + ".txt";
 
     std::ofstream fout;
     fout.open(filename);
