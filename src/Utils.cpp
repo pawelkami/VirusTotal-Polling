@@ -68,3 +68,10 @@ std::string base64_decode(const std::string &in)
     }
     return out;
 }
+
+void fix_utf8_string(std::string& str)
+{
+    std::string temp;
+    utf8::replace_invalid(str.begin(), str.end(), back_inserter(temp));
+    str = temp;
+}
