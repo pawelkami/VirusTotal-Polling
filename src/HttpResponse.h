@@ -34,6 +34,8 @@ public:
 
     const std::string& getHeader(const std::string& key);
 
+    std::string getResponse();
+
 };
 
 

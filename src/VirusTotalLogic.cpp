@@ -138,7 +138,12 @@ void VirusTotalLogic::rescan()
     if (response.getResponseCode()[0] != '2')
     {
         LOG_ERROR("Response code " + response.getResponseCode() + " after sending rescan request");
-        throw RequestException(response.getResponseCode());
+        if(response.getResponseCode() == "403")
+        {
+            LOG_ERROR("Your apikey is probably invalid");
+        }
+
+        throw RequestException(response.getResponseCode() + " Your apikey is probably invalid");
     }
 
     std::string responseBody = response.getBody();
@@ -170,7 +175,7 @@ std::string VirusTotalLogic::parseResults(const std::string &html)
     if(resultConf.find("all") != std::string::npos || resultConf.empty())
     {
 
-        ss << analyzer.getSHA()
+        ss << analyzer.getSHA() << std::endl
            << analyzer.getBasicInfo() << "," << std::endl
            << analyzer.getFileDetails() << "," << std::endl
            << analyzer.getMetadata() << "," << std::endl
@@ -397,7 +402,4 @@ VirusTotalLogic::VirusTotalLogic()
     iterator = 0;
     instance = this;
 }
-
-
-
 

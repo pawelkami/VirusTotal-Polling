@@ -62,20 +62,18 @@ const std::string &HttpResponse::getHeader(const std::string &key) {
     return headers[key];
 }
 
+std::string HttpResponse::getResponse()
+{
+    std::stringstream ss;
 
+    ss << response << "\r\n";
 
+    for(auto& h : headers)
+        ss << h.first << ": " << h.second << std::string("\r\n");
 
+    ss << "\r\n";
+    ss << body;
 
-
-
-
-
-
-
-
-
-
-
-
-
+    return ss.str();
+}
 
