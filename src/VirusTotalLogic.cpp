@@ -72,8 +72,6 @@ std::string VirusTotalLogic::getReport()
             LOG_ERROR("Code " + response.getResponseCode() + " while trying to get report URL");
             throw RequestException(response.getResponseCode());
         }
-        LOG_DEBUG("Received response: " + responseBody);
-        LOG_DEBUG(response.getResponse());
         JsonObject json;
         json.init(responseBody);
         std::string responseCode = json.getValue("response_code");

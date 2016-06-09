@@ -30,7 +30,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if args.rescan and args.sha256:
+    if args.send and args.sha256:
         print('Cannot scan sample with only hash given')
         exit()
 
