@@ -28,8 +28,6 @@ void HttpResponse::buildResponse(const std::string &response)
         body += temp;
     }
 
-    fix_utf8_string(body);
-
     putBody(body);
 }
 

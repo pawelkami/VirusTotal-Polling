@@ -108,7 +108,6 @@ std::string HttpConnection::readChunk(int chunkSize, int sock)
 
     memset(answ, 0, sizeof(answ));
 
-
     int bytesLeft = chunkSize;
 
     while(bytesLeft != 0)
@@ -116,7 +115,9 @@ std::string HttpConnection::readChunk(int chunkSize, int sock)
         int bytesToRead = bytesLeft > RCV_BUF_SIZE ? RCV_BUF_SIZE : bytesLeft;
         int n = isSSL ? SSL_read(conn, answ, bytesToRead) : recv(sock, answ, bytesToRead, 0);
         bytesLeft -= n;
-        answer += answ;
+        for(int i = 0; i < n; ++i)
+            answer.push_back(answ[i]);
+
         memset(answ, 0, sizeof(answ));
     }
     return answer;
