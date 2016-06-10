@@ -16,7 +16,6 @@ void HttpServer::handleConnection(int newSocket)
 {
     std::string clientMessage = receiveMsg(newSocket);
     HttpRequest request(clientMessage);
-
     std::string responseBody;
     if(!handleMessage(request.getBody(), responseBody))
     {
@@ -27,6 +26,7 @@ void HttpServer::handleConnection(int newSocket)
     size_t bodyLength = responseBody.length();
     if(bodyLength)
     {
+        LOG_INFO("OK, Sending HTTP/1.1 200 OK with Content-Length: " + std::to_string(bodyLength));
         sendMsg("HTTP/1.1 200 OK\r\n"
                 "Content-Length: " + std::to_string(bodyLength) +
                 "\r\n\r\n" +
@@ -36,6 +36,8 @@ void HttpServer::handleConnection(int newSocket)
     }
     else
     {
+        LOG_INFO("OK, Sending HTTP/1.1 200 OK");
+
         sendMsg("HTTP/1.1 200 OK\r\n\r\n", newSocket);
     }
     return;
@@ -128,6 +130,12 @@ bool HttpServer::handleMessage(const std::string &message, std::string &response
 
     VirusTotalLogic vtl;
 
+    if(json.has("result_conf"))
+    {
+        LOG_DEBUG("Incoming result_conf " + json.getValue("result_conf"));
+        vtl.setResultConf(json.getValue("result_conf"));
+    }
+
     if(type == "rescan")
     {
         if(!json.getValue("sha256").empty())
@@ -169,6 +177,7 @@ bool HttpServer::handleMessage(const std::string &message, std::string &response
     }
     else if(type == "get_results")
     {
+        LOG_INFO("");
         responseBody = vtl.getResult(json.getValue("sha256"));
     }
     return true;

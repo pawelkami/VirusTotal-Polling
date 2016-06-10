@@ -45,6 +45,11 @@ private:
     std::string boundary = "@@@BOUNDARY@@@";
 
     /**
+     * Konfiguracja rezultatów, które mają zostać wypisane do pliku.
+     */
+    std::string resultConf;
+
+    /**
      * Skrót sha256 badanego pliku.
      */
     std::string fileHash;
@@ -129,6 +134,8 @@ public:
     void setDecodedFile(const std::string &decoded);
 
     void setVirusPath(const std::string& path);
+
+    void setResultConf(const std::string& resultConf);
 
     /**
      * Funkcja wywolywana w celu pozyskiwania raportow w trybie cyklicznym.

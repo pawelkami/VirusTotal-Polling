@@ -169,7 +169,6 @@ std::string VirusTotalLogic::parseResults(const std::string &html)
     }
     ResultsAnalyzer analyzer = ResultsAnalyzer(htmlParser.getRoot());
     std::stringstream ss;
-    std::string resultConf = CONFIG.getValue("results");
     LOG_DEBUG("results = " + resultConf);
 
     if(resultConf.find("all") != std::string::npos || resultConf.empty())
@@ -347,6 +346,7 @@ std::string VirusTotalLogic::getResult(std::string fileHash)
         return std::string((std::istreambuf_iterator<char>(stream)),
                         std::istreambuf_iterator<char>());
     }
+    LOG_WARNING("No results found");
     return "";
 }
 
@@ -440,5 +440,13 @@ VirusTotalLogic::VirusTotalLogic()
 {
     iterator = 0;
     instance = this;
+    resultConf = CONFIG.has("results") ? CONFIG.getValue("results") : "all";
 }
+
+void VirusTotalLogic::setResultConf(const std::string &resultConf)
+{
+    this->resultConf = resultConf;
+}
+
+
 

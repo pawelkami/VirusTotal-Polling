@@ -18,6 +18,9 @@ if __name__ == "__main__":
     parser.add_argument('-i', '--interval', action='store', dest='interval', help='Interval of rescanning files')
     parser.add_argument('-n', action='store', dest='number_of_cycles', help='Number of rescan cycles to do')
     parser.add_argument('-url', action='store', dest='server_url', help='Server address')
+    parser.add_argument('-conf', action='store', dest='result_conf', help='Configuration of JSON results. Combination of '
+                                                                          'all, metadata, sha, filename, ratio,'
+                                                                          'date, file_details, nolist')
 
     input_type = parser.add_mutually_exclusive_group(required=True)
     input_type.add_argument('-f', action='store', dest='file_path', help='Path of file')
@@ -47,7 +50,6 @@ if __name__ == "__main__":
             data['filename'] = args.file_path[args.file_path.rfind('/') + 1:]
             file_data = open(args.file_path, 'rb').read()
             data['file'] = base64.b64encode(file_data)
-        else:
             # Calculate sha256 of file
             BLOCKSIZE = 65536
             hasher = hashlib.sha256()
@@ -57,11 +59,12 @@ if __name__ == "__main__":
                     hasher.update(buf)
                     buf = file.read(BLOCKSIZE)
             data['sha256'] = hasher.hexdigest()
+            print data['sha256']
 
-            if args.rescan:
-                type = "rescan"
-            else:
-                type = "get_results"
+        elif args.rescan:
+            type = "rescan"
+        else:
+            type = "get_results"
     else:
         data['sha256'] = args.sha256
         if args.rescan:
@@ -78,9 +81,11 @@ if __name__ == "__main__":
         data['numberOfCycles'] = args.number_of_cycles
     data['cycling'] = cycling
 
-
     if args.server_url != None:
         server_addr = args.server_url
+
+    if args.result_conf is not None:
+        data['result_conf'] = args.result_conf
 
     response = sendRequest(data)
 
