@@ -145,7 +145,7 @@ public:
     /*
      * Funkcja zwracajaca zawartosc pliku z wynikami skanowania probki o podanym hashu
      */
-    std::string getResult(std::string sha256);
+    std::string getResult(const std::string& sha256);
 
     void setSHA256(const std::string& sha);
 

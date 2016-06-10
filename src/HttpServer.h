@@ -18,6 +18,8 @@ private:
 
     static void sigchldHandler(int sig);
 
+    void sendOkResponse(int sock);
+
 public:
     static HttpServer& getInstance();
 
@@ -26,7 +28,7 @@ public:
 
     void handleConnection(int socket_desc);
 
-    bool handleMessage(const std::string& message, std::string& responseBody);
+    std::string handleMessage(const std::string& message, int sock);
 
     void startServer();
 

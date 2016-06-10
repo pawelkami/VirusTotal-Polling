@@ -41,6 +41,10 @@ if __name__ == "__main__":
         print('Cannot get results in cycles')
         exit()
 
+    if args.get_results and args.result_conf:
+        print('Cannot get results with config')
+        exit()
+
     type = "rescan"
     data = {}
     file_data = None

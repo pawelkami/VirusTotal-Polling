@@ -4,6 +4,7 @@
 #include "VirusTotalLogic.h"
 #include <sys/wait.h>
 #include <signal.h>
+#include <src/exception/RequestException.h>
 #include "Utils.h"
 
 HttpServer::HttpServer()
@@ -16,14 +17,21 @@ void HttpServer::handleConnection(int newSocket)
 {
     std::string clientMessage = receiveMsg(newSocket);
     HttpRequest request(clientMessage);
-    std::string responseBody;
-    if(!handleMessage(request.getBody(), responseBody))
+    std::string responseBody = "";
+    try
     {
-        LOG_ERROR("Received bad Http Request");
+        responseBody = handleMessage(request.getBody(), newSocket);
+    }
+    catch(RequestException& e)
+    {
+        LOG_ERROR(std::string("Received bad Http Request - ") + e.what());
         sendMsg("HTTP/1.1 400 Bad Request\r\n\r\n", newSocket);
+        return;
     }
 
-    size_t bodyLength = responseBody.length();
+    size_t bodyLength = responseBody.size();
+    LOG_DEBUG(std::to_string(bodyLength));
+
     if(bodyLength)
     {
         LOG_INFO("OK, Sending HTTP/1.1 200 OK with Content-Length: " + std::to_string(bodyLength));
@@ -34,13 +42,6 @@ void HttpServer::handleConnection(int newSocket)
                 "\r\n",
                 newSocket);
     }
-    else
-    {
-        LOG_INFO("OK, Sending HTTP/1.1 200 OK");
-
-        sendMsg("HTTP/1.1 200 OK\r\n\r\n", newSocket);
-    }
-    return;
 }
 
 void HttpServer::init()
@@ -95,6 +96,7 @@ void HttpServer::startServer()
             if((pid = fork()) == 0)
             {
                 handleConnection(newSocket);
+                close(newSocket);
                 exit(0);
             }
             else
@@ -106,7 +108,7 @@ void HttpServer::startServer()
         if (newSocket<0)
         {
             perror("accept failed");
-            LOG_INFO("accept failed");
+            LOG_ERROR("accept failed");
         }
     }
 }
@@ -116,14 +118,14 @@ HttpServer::~HttpServer()
     close(sock);
 }
 
-bool HttpServer::handleMessage(const std::string &message, std::string &responseBody)
+std::string HttpServer::handleMessage(const std::string &message, int newSocket)
 {
     JsonObject json;
     json.init(message);
     if(!json.has("type"))
     {
         LOG_ERROR("Received JSON does not contain 'type'");
-        return false;
+        throw RequestException("Received JSON does not contain 'type'");
     }
 
     std::string type = json.getValue("type");
@@ -141,6 +143,8 @@ bool HttpServer::handleMessage(const std::string &message, std::string &response
         if(!json.getValue("sha256").empty())
         {
             vtl.setSHA256(json.getValue("sha256"));
+
+            sendOkResponse(newSocket);
             if(json.getValue("cycling") == "yes")
             {
                 vtl.getCyclicReport(atoi(json.getValue("interval").c_str()), atoi(json.getValue("numberOfCycles").c_str()), true);
@@ -153,12 +157,14 @@ bool HttpServer::handleMessage(const std::string &message, std::string &response
         else
         {
             LOG_ERROR("No sha256 in message");
+            throw RequestException("No sha256 in message");
         }
     }
     else if(type == "send")
     {
         if(json.has("file"))
         {
+            sendOkResponse(newSocket);
             vtl.setVirusPath(json.getValue("filename"));
             vtl.setDecodedFile(base64_decode(json.getValue("file")));
             if(json.getValue("cycling") == "yes")
@@ -173,15 +179,17 @@ bool HttpServer::handleMessage(const std::string &message, std::string &response
         else
         {
             LOG_ERROR("No body of file in message");
+            throw RequestException("No body of file in message");
         }
     }
     else if(type == "get_results")
     {
-        LOG_INFO("");
-        responseBody = vtl.getResult(json.getValue("sha256"));
-    }
-    return true;
+        LOG_INFO("get_results");
 
+        return vtl.getResult(json.getValue("sha256"));
+    }
+
+    return "";
 }
 
 HttpServer &HttpServer::getInstance()
@@ -194,8 +202,17 @@ void HttpServer::sigchldHandler(int sig)
 {
     pid_t pid;
     pid = wait(NULL);
-    LOG_INFO("Process has ended. pid = " + std::to_string(pid));
+    LOG_INFO("Process has ended. pid = " + std::to_string(pid) + " ret number = " + std::to_string(sig));
 }
+
+void HttpServer::sendOkResponse(int sock)
+{
+    LOG_INFO("OK, Sending HTTP/1.1 200 OK");
+
+    sendMsg("HTTP/1.1 200 OK\r\n\r\n", sock);
+}
+
+
 
 
 

@@ -306,7 +306,7 @@ void VirusTotalLogic::getCyclicReport(int interval, int numberOfCycles, bool toR
     ioService.run();
 }
 
-std::string VirusTotalLogic::getResult(std::string fileHash)
+std::string VirusTotalLogic::getResult(const std::string& fileHash)
 {
     std::string latestDate = "";
 
@@ -316,7 +316,7 @@ std::string VirusTotalLogic::getResult(std::string fileHash)
 
     directory = opendir(CONFIG.getValue("results_path").c_str());
     if (directory != NULL){
-        while (file = readdir(directory)){
+        while ((file = readdir(directory))){
             std::string currentFilename = file->d_name;
 
             // underscore divides hash and date in result's filename
