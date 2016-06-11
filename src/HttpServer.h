@@ -9,6 +9,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <string>
+#include <map>
 #include "HttpConnection.h"
 
 class HttpServer : public HttpConnection
@@ -19,6 +20,8 @@ private:
     static void sigchldHandler(int sig);
 
     void sendOkResponse(int sock);
+
+    static std::map<pid_t, int> clientSockets;
 
 public:
     static HttpServer& getInstance();

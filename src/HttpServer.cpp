@@ -7,6 +7,8 @@
 #include <src/exception/RequestException.h>
 #include "Utils.h"
 
+std::map<pid_t, int> HttpServer::clientSockets;
+
 HttpServer::HttpServer()
 {
     signal(SIGCHLD, &sigchldHandler);
@@ -30,7 +32,6 @@ void HttpServer::handleConnection(int newSocket)
     }
 
     size_t bodyLength = responseBody.size();
-    LOG_DEBUG(std::to_string(bodyLength));
 
     if(bodyLength)
     {
@@ -102,6 +103,7 @@ void HttpServer::startServer()
             else
             {
                 LOG_INFO("New process pid = " + std::to_string(pid));
+                clientSockets[pid] = newSocket;
             }
         }
 
@@ -202,7 +204,8 @@ void HttpServer::sigchldHandler(int sig)
 {
     pid_t pid;
     pid = wait(NULL);
-    LOG_INFO("Process has ended. pid = " + std::to_string(pid) + " ret number = " + std::to_string(sig));
+    close(clientSockets[pid]);
+    LOG_INFO("Process has ended. pid = " + std::to_string(pid) + " sig number = " + std::to_string(sig));
 }
 
 void HttpServer::sendOkResponse(int sock)
